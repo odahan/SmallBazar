@@ -1,0 +1,24 @@
+# Build outputs and generated source files
+[Bb]in/
+[Oo]bj/
+DummyGenerated/
+AppPackages/
+TestResults/
+
+# Local IDE settings and temporary files
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.tmp
+*.bak
+*.pubxml.user
+
+# Private signing certificates and local secrets
+*.pfx
+*.p12
+*.keystore
+.env
+.env.*
+!.env.example

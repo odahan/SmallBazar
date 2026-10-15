@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="SmallBazar.Views.LogPage"
+             xmlns:viewModels1="using:SmallBazar.ViewModels"
+             x:DataType="viewModels1:LogPageViewModel"
+             Title="Logs">
+    <Grid RowDefinitions="*,70">
+
+        <ScrollView Grid.Row="0" VerticalScrollBarVisibility="Always">
+            <Editor Text="{Binding Logs}" 
+                   VerticalOptions="Start" HorizontalOptions="Start" 
+                   FontFamily="MonoRegular" FontSize="14"/>
+        </ScrollView>
+        <StackLayout Grid.Row="1" Orientation="Vertical" Spacing="10">
+            <BoxView HeightRequest="1" BackgroundColor="#FF7200" HorizontalOptions="FillAndExpand"/>
+            <StackLayout Orientation="Horizontal" Spacing="10" HorizontalOptions="Center" VerticalOptions="Center">
+                <Button Text="Del.Logs" Command="{Binding DeleteLogsCommand}" HeightRequest="48"/>
+                <Button Text="Reload"  Command="{Binding GetLogCommand}" HeightRequest="48"/>
+                <Button Text="Share" Command="{Binding ShareLogFilesCommand}" HeightRequest="48" />
+                <Button Text="Close" Command="{Binding CloseCommand}" HeightRequest="48" BackgroundColor="#95CEFF"/>
+            </StackLayout>
+        </StackLayout>
+    </Grid>
+</ContentPage>

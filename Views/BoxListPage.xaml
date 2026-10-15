@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:SmallBazar.Models"
+             xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
+             xmlns:utils="clr-namespace:SmallBazar.Utils"
+             xmlns:controls="clr-namespace:SmallBazar.Controls"
+             x:Class="SmallBazar.Views.BoxListPage"
+             x:DataType="viewModels:GlobalViewModel"
+             Title="Box List">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <controls:BoolToImageConverter x:Key="BoolToImageConverter" />
+            <utils:PlatformDataTemplateSelector x:Key="PlatformTemplateSelector">
+                <utils:PlatformDataTemplateSelector.DefaultTemplate>
+                    <DataTemplate x:DataType="models:Box">
+                        <Grid HorizontalOptions="FillAndExpand" Padding="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup Name="CommonStates">
+                                    <VisualState Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="White"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="LightSkyBlue"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Label Grid.Column="0" Text="{Binding Number, StringFormat='{0,3}'}" 
+                                   TextColor="Red" FontAttributes="Bold"/>
+                            <Label Grid.Column="1" Text="{Binding Description}" LineBreakMode="MiddleTruncation" Margin="5,0,0,0"
+                                   TextColor="Black"/>
+                        </Grid>
+                    </DataTemplate>
+                </utils:PlatformDataTemplateSelector.DefaultTemplate>
+                <utils:PlatformDataTemplateSelector.WindowsTemplate>
+                    <DataTemplate x:DataType="models:Box">
+                        <Grid HorizontalOptions="FillAndExpand" Padding="5" HeightRequest="30">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <VisualStateManager.VisualStateGroups>
+                                <VisualStateGroup Name="CommonStates">
+                                    <VisualState Name="Normal">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="White"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                    <VisualState Name="Selected">
+                                        <VisualState.Setters>
+                                            <Setter Property="BackgroundColor" Value="LightSkyBlue"></Setter>
+                                        </VisualState.Setters>
+                                    </VisualState>
+                                </VisualStateGroup>
+                            </VisualStateManager.VisualStateGroups>
+
+                            <Label Grid.Column="0" Text="{Binding Number, StringFormat='{0,3}'}" 
+                                   TextColor="Red" FontAttributes="Bold"/>
+                            <Label Grid.Column="1" Text="{Binding DescriptionForDisplay}" LineBreakMode="MiddleTruncation" Margin="5,0,0,0"
+                                   TextColor="Black"/>
+                            <Grid.GestureRecognizers>
+                                <TapGestureRecognizer NumberOfTapsRequired="2" 
+                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DoubleTapCommand}" />
+                            </Grid.GestureRecognizers>
+                        </Grid>
+                    </DataTemplate>
+                </utils:PlatformDataTemplateSelector.WindowsTemplate>
+            </utils:PlatformDataTemplateSelector>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid RowDefinitions="*,60">
+        <!-- liste -->
+        <CollectionView Grid.Row="0"
+                        ItemsSource="{Binding BoxList}" 
+                        SelectionMode="Single"
+                        SelectedItem="{Binding SelectedBox, Mode=TwoWay}"
+                        SelectionChanged="CollectionView_SelectionChanged"
+                        BackgroundColor="White"
+                        ItemTemplate="{StaticResource PlatformTemplateSelector}">
+        </CollectionView>
+
+        <!-- Bottom bar -->
+        <Frame Padding="4" HeightRequest="60" Grid.Row="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="60" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="60" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0" ColumnDefinitions="*,*" ColumnSpacing="5">
+                    <ImageButton Grid.Column="0" 
+                                 VerticalOptions="Center" 
+                                 HorizontalOptions="Center"
+                                 Command="{Binding ClearFilterCommand}"
+                                 Source="{Binding IsFiltered, Converter={StaticResource BoolToImageConverter}}"
+                                 x:Name="FilterButton">
+                    </ImageButton>
+
+                    <Label Text="{Binding BoxCount}" Grid.Column="1" FontSize="Small" VerticalOptions="Center"/>
+                </Grid>
+
+                <ImageButton Source="newgreen.png" Grid.Column="2"
+                             VerticalOptions="Center" HorizontalOptions="Center"
+                             Command="{Binding NewBoxCommand}"
+                             Clicked="OnBarButtonClicked" />
+
+                <StackLayout Grid.Column="1" Orientation="Horizontal"
+                             HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="Sort" VerticalOptions="Center"/>
+                    <RadioButton Content="1..2" Value="NUMBER" GroupName="SORT" IsChecked="{Binding IsSortByNumber}"/>
+                    <RadioButton Content="Text" Value="DESCRIPTION" GroupName="SORT" IsChecked="{Binding IsSortByDescription}"/>
+                </StackLayout>
+            </Grid>
+        </Frame>
+
+        <!-- ActivityIndicator -->
+        <ActivityIndicator Grid.Row="0"
+                           IsRunning="{Binding IsBusy}" 
+                           VerticalOptions="Center" 
+                           HorizontalOptions="Center" 
+                           Color="#0EA3FF" />
+    </Grid>
+</ContentPage>

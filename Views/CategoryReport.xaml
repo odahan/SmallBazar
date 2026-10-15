@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="SmallBazar.Views.CategoryReport"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:SmallBazar.Views"
+    xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+    mc:Ignorable="d">
+
+    <ContentPage.Resources>
+        <toolkit:InvertedBoolConverter x:Key="InverseBoolConverter"/>
+    </ContentPage.Resources>
+    
+    <ContentPage.Content>
+        <Grid RowDefinitions="*,60" Padding="0">
+            <!-- webview -->
+            <WebView Grid.Row="0" x:Name="ReportWebView" HorizontalOptions="Fill" VerticalOptions="Fill" Navigated="ReportWebView_Navigated"
+                     IsVisible="{Binding IsNotGeneratingReport}"/>
+
+            <!-- Indicateur de chargement (visible lorsque le rapport n'est pas visible) -->
+            <StackLayout Grid.Row="0"  IsVisible="{Binding IsNotGeneratingReport, Converter={StaticResource InverseBoolConverter}}" 
+                         VerticalOptions="CenterAndExpand" HorizontalOptions="CenterAndExpand">
+                <ActivityIndicator IsRunning="{Binding IsNotGeneratingReport, Converter={StaticResource InverseBoolConverter}}" />
+                <Label Text="Generating your report, please wait..." HorizontalOptions="Center" VerticalOptions="Center"/>
+            </StackLayout>
+
+
+            <!-- footer -->
+            <BoxView Grid.Row="1" Color="Orange" HeightRequest="2" HorizontalOptions="Fill" VerticalOptions="Start" />
+            <HorizontalStackLayout Grid.Row="1" HorizontalOptions="Center" Spacing="10" Margin="0">
+                <Button Text="Close" Clicked="OnCloseClicked"  HeightRequest="34" VerticalOptions="Center" Padding="2" IsEnabled="{Binding IsNotGeneratingReport}" WidthRequest="70" BackgroundColor="Orange" TextColor="Black"/>
+                <Button Text="Export" Command="{Binding SaveHtmlReportCommand}"  HeightRequest="34" VerticalOptions="Center" Padding="2" IsEnabled="{Binding IsNotGeneratingReport}" WidthRequest="70"/>
+               <!-- <Button Text="Regen" Command="{Binding RegenReportCommand}"  HeightRequest="34" VerticalOptions="Center" Padding="2" IsEnabled="{Binding IsNotGeneratingReport}" WidthRequest="70"/> -->
+                <Button Text="Refresh" Clicked="OnRefreshClicked" HeightRequest="34" VerticalOptions="Center" Padding="2" IsEnabled="{Binding IsNotGeneratingReport}"   WidthRequest="70"/>
+            </HorizontalStackLayout>
+
+        </Grid>
+    </ContentPage.Content>
+</ContentPage> 

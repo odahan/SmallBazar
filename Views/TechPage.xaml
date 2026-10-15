@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:SmallBazar.Controls"
+             xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
+             x:Class="SmallBazar.Views.TechPage"
+             Title="Tools"
+             x:DataType="viewModels:GlobalViewModel">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <x:Boolean x:Key="IsDebug">False</x:Boolean>
+            <!-- Default value -->
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+
+    <ScrollView>
+        <VerticalStackLayout Margin="10,10,10,0" Spacing="10" VerticalOptions="Start">
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+
+
+                <!-- Database tools-->
+                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="0">
+                    <VerticalStackLayout Margin="5">
+                        <Label Text="Database" FontAttributes="Bold" TextColor="#AE7C23"/>
+                        <Button Text="Save" WidthRequest="130" Command="{Binding BackupDatabaseCommand}"/>
+                        <Button Text="Restore" WidthRequest="130" Command="{Binding RestoreDatabaseCommand}"/>
+                        <Button WidthRequest="130" Command="{Binding ExportDataCommand}">
+                            <Button.Text>
+                                <OnPlatform x:TypeArguments="x:String">
+                                    <On Platform="Android, iOS" Value="Share as text" />
+                                    <On Platform="WinUI"        Value="To clipboard" />
+                                </OnPlatform>
+                            </Button.Text>
+                        </Button>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Logs tools -->
+                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="1">
+                    <VerticalStackLayout Margin="5">
+                        <Label Text="Logs" FontAttributes="Bold" TextColor="#AE7C23"/>
+                        <Button Text="Show" WidthRequest="130" Command="{Binding ShowLogsCommand}" />
+                        <Button Text="Share" WidthRequest="130" Command="{Binding ShareLogFilesCommand}"/>
+                        <Button Text="Clear" WidthRequest="130" Command="{Binding DeleteLogsCommand}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+            </Grid>
+
+
+            <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                <!-- maintenance -->
+                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="0">
+                    <VerticalStackLayout Margin="5">
+                        <Label Text="Maintenance" FontAttributes="Bold" TextColor="#AE7C23"/>
+                        <Button Text="Areas" WidthRequest="130" Command="{Binding EditAreasCommand}"/>
+                        <Button Text="Clear DB" WidthRequest="130" Command="{Binding ClearDatabaseCommand}"
+                                IsEnabled="{DynamicResource IsDebug}"/>
+                        <Button Text="Fake Data" WidthRequest="130" Command="{Binding PopulateDbCommand}" 
+                                IsEnabled="{DynamicResource IsDebug}"/>
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- AI -->
+                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="1">
+                    <VerticalStackLayout Margin="5">
+                        <Label Text="AI" FontAttributes="Bold" TextColor="#AE7C23"/>
+                        <Button Text="Enter Key" WidthRequest="130" Command="{Binding EnterKeyCommand}"/>
+                        <Button Text="Clear Key" WidthRequest="130" Command="{Binding ClearKeyCommand}"/>
+                        <Button Text="Check Key" WidthRequest="130" Command="{Binding CheckKeyCommand}" />
+                    </VerticalStackLayout>
+                </Frame>
+
+
+            </Grid>
+
+            <!-- Version info -->
+            <Frame BorderColor="#059FFF" Padding="5" >
+                <VerticalStackLayout Margin="5">
+                    <Label Text="Version" FontAttributes="Bold" TextColor="#059FFF" />
+                    <Grid ColumnDefinitions="90,*"
+                    RowDefinitions="*,*,*,*,*" >
+                        <Label Text="Product" Grid.Row="0" Grid.Column="0"/>
+                        <Label Text="Version" Grid.Row="1" Grid.Column="0"/>
+                        <Label Text="©" Grid.Row="2" Grid.Column="0"/>
+                        <Label Text="Company" Grid.Row="3" Grid.Column="0"/>
+                        <Label Text="Description" Grid.Row="4" Grid.Column="0"/>
+                        <Label Text="{Binding Product}" Grid.Row="0" Grid.Column="1" FontAttributes="Bold" />
+                        <Label Text="{Binding Version}" Grid.Row="1" Grid.Column="1" FontAttributes="Bold"/>
+                        <Label Text="{Binding Copyright}" Grid.Row="2" Grid.Column="1" FontAttributes="Bold" />
+                        <Label Text="{Binding Company}" Grid.Row="3" Grid.Column="1" FontAttributes="Bold" />
+                        <Label Text="{Binding SoftDescription}" Grid.Row="4" Grid.Column="1" FontAttributes="Bold" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Frame>
+
+
+
+
+            <!-- E-Naxos Links -->
+            <Frame BorderColor="#059FFF" Padding="5"  >
+                <VerticalStackLayout Margin="5">
+                    <Label HorizontalOptions="Center" 
+                Text="Visit www.e-naxos.com" TextDecorations="Underline" >
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenWebsiteCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                    <Label HorizontalOptions="Center" 
+                Text="Visit Dot.Blog" TextDecorations="Underline" >
+                        <Label.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding OpenDotBlogCommand}" />
+                        </Label.GestureRecognizers>
+                    </Label>
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
+    

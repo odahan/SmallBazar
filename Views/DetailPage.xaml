@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             x:Class="SmallBazar.Views.DetailPage"
+             x:DataType="viewModels:GlobalViewModel"
+             Title="Detail">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:IsNotNullConverter x:Key="IsNotNullConverter" />
+            <toolkit:IsNullConverter x:Key="IsNullConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid Margin="5" VerticalOptions="FillAndExpand">
+        <!-- no box -->
+        <Label Text="No box selected" IsVisible="{Binding SelectedBox, Converter={StaticResource IsNullConverter}}" 
+               VerticalOptions="Center" HorizontalOptions="Center" FontSize="20" FontAttributes="Bold"
+               />
+
+        <Grid Margin="0,0,0,0" 
+              IsVisible="{Binding SelectedBox, Converter={StaticResource IsNotNullConverter}}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="90"/>
+                <!-- R0 box id -->
+                <RowDefinition Height="*"/>
+                <!-- R1 description -->
+                <RowDefinition Height="60"/>
+                <!-- R2 storage -->
+                <RowDefinition Height="60"/>
+                <!-- R3 buttons -->
+
+            </Grid.RowDefinitions>
+
+            <!-- Title Box Number 0 -->
+            <Frame Grid.Row="0" HeightRequest="60" Padding="2" >
+                <Grid ColumnDefinitions="80,*" RowDefinitions="*,20">
+                    <Frame Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" HeightRequest="40" WidthRequest="40" 
+                           CornerRadius="20" Padding="2" HorizontalOptions="Center" VerticalOptions="Center"
+                           BorderColor="Orange">
+                        <Image  Source="aboutappicon.png" Aspect="AspectFill" HeightRequest="24" WidthRequest="24" HorizontalOptions="Center"/>
+                    </Frame>
+                    <Label Grid.Column="1" Grid.Row="0"
+                           FontSize="18" FontAttributes="Bold"
+                           Text="{Binding SelectedBox.Number, StringFormat='Box n° {0}', FallbackValue='0'}"
+                           VerticalOptions="Center" 
+                           HorizontalOptions="Start" />
+                    <HorizontalStackLayout Grid.Column="1" Grid.Row="0" Grid.RowSpan="2" HorizontalOptions="End" 
+                                           VerticalOptions="Center" Padding="0" Margin="0"
+                                           IsVisible="{Binding IsFiltered}" >
+
+                        <Frame BackgroundColor="{StaticResource Primary}" 
+                               VerticalOptions="Fill"
+                               HorizontalOptions="Fill"
+                               Padding="5"
+                               Margin="0"
+                               HeightRequest="40"
+                               CornerRadius="8">
+                            <Frame.Triggers>
+                                <DataTrigger TargetType="Frame" Binding="{Binding IsPreviousOk}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="Silver"/>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Frame.Triggers>
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding PreviousCommand}" Tapped="OnFrameTapped"/>
+                            </Frame.GestureRecognizers>
+                            <Polygon Points="0,0 16,10, 0,20" Stroke="Transparent" Fill="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="Center" Rotation="180"/>
+                        </Frame>
+
+                        <Frame BackgroundColor="{StaticResource Primary}" 
+                               VerticalOptions="Fill"
+                               HorizontalOptions="Fill"
+                               Padding="5"
+                               Margin="0"
+                               HeightRequest="40"
+                               CornerRadius="8" >
+                            <Frame.Triggers>
+                                <DataTrigger TargetType="Frame" Binding="{Binding IsNextOk}" Value="False">
+                                    <Setter Property="BackgroundColor" Value="Silver"/>
+                                    <Setter Property="IsEnabled" Value="False"/>
+                                </DataTrigger>
+                            </Frame.Triggers>
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding NextCommand}" Tapped="OnFrameTapped"/>
+                            </Frame.GestureRecognizers>
+                            <Polygon Points="0,0 16,10, 0,20" Stroke="Transparent" Fill="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="Center" />
+                        </Frame>
+
+                    </HorizontalStackLayout>
+
+                    <Label Grid.Row="1" Grid.Column="1" 
+                           Text="{Binding SelectedBox.CreatedAt, StringFormat='{0:dddd, dd/MM/yyyy HH:mm}', FallbackValue='No date available'}" 
+                           FontSize="11"/>
+                </Grid>
+            </Frame>
+
+            <!-- Description editor 1 -->
+            <Frame Grid.Row="1" Padding="0" BackgroundColor="Transparent"
+             BorderColor="Transparent">
+                <Editor Text="{Binding Description}" 
+                  BackgroundColor="{StaticResource  Secondary}"
+                  TextColor="{StaticResource Black}"
+                  FontAttributes="Bold" FontSize="18"
+                  />
+            </Frame>
+
+            <!-- Storage Area 2 -->
+            <Grid Grid.Row="2" ColumnDefinitions="*,*,*"
+                               VerticalOptions="Center" HorizontalOptions="Fill">
+                <Label Text="Storage Area" VerticalOptions="Center" Grid.Column="0"/>
+                <Picker  Grid.Column="1"
+                  ItemsSource="{Binding StorageAreas}"
+                  SelectedItem="{Binding SelectedArea}"
+                  WidthRequest="160"
+                  FontAttributes="Bold"
+                  Margin="10,0,0,0">
+                    <Picker.ItemDisplayBinding>
+                        <Binding Path="Name" />
+                    </Picker.ItemDisplayBinding>
+                </Picker>
+                <Grid Grid.Column="2" ColumnDefinitions="*,*,*">
+                    <ImageButton Source="closecircle.png" Grid.Column="1" VerticalOptions="Center"
+                        WidthRequest="24" HeightRequest="24" HorizontalOptions="Center"
+                       Command="{Binding EraseAreaCommand}"/>
+                    <ImageButton Source="circleadd.png" Grid.Column="2" VerticalOptions="Center"  
+                             WidthRequest="28" HeightRequest="28" HorizontalOptions="Center"
+                                 Command="{Binding EditAreasCommand}"/>
+
+                </Grid>
+            </Grid>
+
+
+            <!-- Buttons area 3 -->
+            <Frame Grid.Row="3" Padding="2">
+
+                <Grid VerticalOptions="Fill" Padding="0" 
+                      ColumnDefinitions="*,*,*"
+                      HorizontalOptions="FillAndExpand"
+                      Margin="10,0,10,0">
+
+                    <Button  Command="{Binding DeleteCurrentBoxCommand}"
+                   HeightRequest="40" WidthRequest="100" Text="Del" CornerRadius="20" VerticalOptions="Center" 
+                     HorizontalOptions="Start" Grid.Column="0"/>
+
+                    <Button  Command="{Binding RefreshBoxCommand}"
+                             HeightRequest="40" WidthRequest="100" Text="Cancel" CornerRadius="20" VerticalOptions="Center" 
+                             HorizontalOptions="Center" 
+                             IsEnabled="{Binding IsModified}"
+                             Grid.Column="1"/>
+
+                    <Button  Command="{Binding SaveCommand}" BackgroundColor="DeepSkyBlue" 
+                             HeightRequest="40" WidthRequest="100" Text="Save" CornerRadius="20" 
+                             IsEnabled="{Binding IsModified}" BorderColor="#FF790E" BorderWidth="2"
+                             VerticalOptions="Center" HorizontalOptions="End" 
+                             Grid.Column="2"/>
+
+                </Grid>
+
+            </Frame>
+
+
+        </Grid>
+    </Grid>
+</ContentPage>

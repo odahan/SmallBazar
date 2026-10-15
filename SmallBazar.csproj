@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+		<TargetFrameworks>net8.0-android;net8.0-windows10.0.19041.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+
+		
+        <!-- .NET MAUI -->
+        <UseMaui>true</UseMaui>
+        <SingleProject>true</SingleProject>
+
+        <!-- Project Options -->
+        <Nullable>disable</Nullable>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <RootNamespace>SmallBazar</RootNamespace>
+
+        <!-- Display name -->
+        <ApplicationTitle>Small Bazar</ApplicationTitle>
+
+        <!-- App Identifier -->
+        <ApplicationId>com.enaxos.smallbazar</ApplicationId>
+
+        <!-- Versions -->
+        <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
+        <ApplicationVersion>1</ApplicationVersion>
+        <Copyright>©2024 e-naxos / O.Dahan</Copyright>
+        <Description>Helping you find your stuff!</Description>
+        <Company>E-Naxos</Company>
+        <Product>Small Bazar</Product>
+		
+
+        <!-- Target Platform Options -->
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">21.0</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+
+        <!-- Minimum Target OS Version for Windows Platform -->
+        <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+
+        <!-- Emit Compiler Generated Files -->
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+        <CompilerGeneratedFilesOutputPath>$(SolutionDir)DummyGenerated</CompilerGeneratedFilesOutputPath>
+        <PublishAot>False</PublishAot>
+        <Platforms>AnyCPU;x64</Platforms>
+        <DefaultLanguage>en</DefaultLanguage>
+        <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
+        <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+        <PackageCertificateThumbprint>2A008DB04713ED7C581DE5D19268018275ED58AF</PackageCertificateThumbprint>
+        <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+        <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+        <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
+        <GenerateTestArtifacts>True</GenerateTestArtifacts>
+        <AppInstallerUri>\\TANKER\Développement\SmallBazarWinInstaller</AppInstallerUri>
+        <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <!-- App Icon -->
+        <MauiIcon Include="Resources\appicon.svg" Color="#00A6F4" />
+        <!-- Splash Screen -->
+        <MauiSplashScreen Include="Resources\splash.svg" Color="White" BaseSize="223,86" />
+        <!-- Images -->
+        <MauiImage Include="Resources\Images\*" />
+        <!-- Custom Fonts -->
+        <MauiFont Include="Resources\Fonts\*" />
+        <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->
+        <MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AndroidResource Remove="Resources\Splash\**" />
+      <Compile Remove="Resources\Splash\**" />
+      <EmbeddedResource Remove="Resources\Splash\**" />
+      <MauiCss Remove="Resources\Splash\**" />
+      <MauiXaml Remove="Resources\Splash\**" />
+      <None Remove="Resources\Splash\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiImage Remove="Resources\Images\splashsplashscreen.png" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Remove="Resources\Images\aboutappicon.png" />
+        <None Remove="Resources\Images\circleadd.png" />
+        <None Remove="Resources\Images\closecircle.png" />
+        <None Remove="Resources\Images\filtergray.png" />
+        <None Remove="Resources\Images\filtergreen.png" />
+        <None Remove="Resources\Images\newgreen.png" />
+        <None Remove="SmallBazar.code-workspace" />
+        <None Remove="Directory.Packages.props" />
+    </ItemGroup>
+
+  
+    <ItemGroup>
+        <PackageReference Include="CommunityToolkit.Maui" Version="9.0.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.*" Condition="'$(Configuration)' == 'Debug'" />
+        <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+        <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+        <PackageReference Include="OpenAI" Version="2.4.0" />
+        <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
+        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiXaml Update="Views\AddBoxPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\AreaPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\BoxListPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\CategoryReport.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\DetailPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\LogPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\SearchPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+      <MauiXaml Update="Views\TechPage.xaml">
+        <Generator>MSBuild:Compile</Generator>
+      </MauiXaml>
+    </ItemGroup>
+</Project>

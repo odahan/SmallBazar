@@ -1,0 +1,23 @@
+﻿using Android.App;
+using Android.Runtime;
+using AndroidX.AppCompat.App;
+
+namespace SmallBazar
+{
+    [Application]
+    public class MainApplication : MauiApplication
+    {
+        public MainApplication(IntPtr handle, JniHandleOwnership ownership)
+            : base(handle, ownership)
+        {
+        }
+
+        public override void OnCreate()
+        {
+            base.OnCreate();
+            AppCompatDelegate.DefaultNightMode = AppCompatDelegate.ModeNightNo;
+        }
+
+        protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+    }
+}

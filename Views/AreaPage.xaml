@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:SmallBazar.Models"
+             xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
+             x:Class="SmallBazar.Views.AreaPage"
+             Title="Areas"
+             x:DataType="viewModels:AreaPageViewModel"
+             >
+
+    <Grid RowDefinitions="*,60,60" Margin="15,0,15,10">
+        <RefreshView Grid.Row="0"  Command="{Binding RefreshListCommand}" 
+                     IsRefreshing="{Binding IsRefreshing}">
+            <CollectionView ItemsSource="{Binding Areas}" 
+                  SelectedItem="{Binding SelectedArea, Mode=TwoWay}"
+                        SelectionMode="Single">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:AreaDisplayable">
+                        <Label Text="{Binding Name}" VerticalOptions="Center" HorizontalOptions="Start"
+                                   HeightRequest="40" VerticalTextAlignment="Center"
+                               FontAttributes="Bold"/>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+        <HorizontalStackLayout Grid.Row="1" Spacing="20" VerticalOptions="Center" HorizontalOptions="Center">
+            <Button Text="Delete" Command="{Binding DeleteSelectedAreaCommand}" 
+                    WidthRequest="100" />
+            <Button Text="Modify" Command="{Binding ModifySelectedAreaCommand}" 
+                    WidthRequest="100" />
+            <Button Text="Add Area" Command="{Binding AddAreaCommand}" 
+                    WidthRequest="100" />
+        </HorizontalStackLayout>
+        <Button Text="Close" Grid.Row="2" Command="{Binding CloseCommand}" 
+                WidthRequest="100" HeightRequest="40" BackgroundColor="#028D61"/>
+    </Grid>
+
+</ContentPage>

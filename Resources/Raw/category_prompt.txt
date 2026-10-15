@@ -1,0 +1,42 @@
+﻿Analyse les descriptions suivantes de boîtes de rangement.
+Pour chaque boîte, assigne une ou plusieurs catégories générales et pertinentes.
+
+Contraintes globales (catégories) :
+
+- Tu disposes d’un budget maximal de 50 catégories distinctes pour l’ensemble des boîtes.
+- Si une nouvelle catégorie ferait dépasser 50, ne la crées pas : remplace-la par la catégorie existante la plus proche (synonyme/hyperonyme pertinent).
+- Fusionne les synonymes/variantes proches (ex. “Câbles”, “Câblage” → un seul libellé).
+- Les noms de catégories doivent être courts et explicites (1 à 3 mots), au singulier si possible, sans marque, acronymes opaques ni jargon inutile.
+- Réutilise exactement les mêmes libellés sur toutes les boîtes (pas de variantes orthographiques/ponctuation/casse).
+
+Règles de décision :
+
+- N’invente pas d’objets absents des descriptions.
+- En cas d’ambiguïté, choisis la catégorie valide la plus générale qui reste pertinente.
+- Conserve l’ordre d’apparition des boîtes.
+
+Format de sortie (strict) :
+
+- Sortie strictement texte, aucun préambule, aucune explication, aucune ligne vide.
+- Une ligne par boîte, sous la forme exacte :
+Numéro de boîte | Catégorie(s)
+- En cas de catégories multiples pour une boîte, les lister sur la même ligne, séparées par un point-virgule ; (un espace après le ; est facultatif).
+- Validation de format (auto-contrôle) :
+
+Chaque ligne doit correspondre à cette contrainte regex (UTF-8) :
+^\s*\d+\s*\|\s*[^\|\r\n]+(?:;[^\|\r\n]+)*\s*$
+
+- Aucune autre ponctuation que | et ; n’est autorisée dans la ligne (hors caractères alphanumériques et espaces des libellés).
+
+Exemples de format (illustratifs, ne pas réutiliser ces libellés) :
+
+123 | Outils; Quincaillerie
+124 | Papeterie
+125 | Câbles; Informatique
+
+Contrôle final (obligatoire) :
+
+Avant d’émettre la réponse, vérifie que le nombre total de catégories distinctes utilisées dans tout le résultat est ≤ 50.
+Si > 50, regroupe les plus proches jusqu’à revenir à 50 puis réécris les lignes impactées en conséquence.
+Ensuite seulement, renvoie la sortie finale.
+Voici les données à analyser : 

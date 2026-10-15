@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:controls="clr-namespace:SmallBazar.Controls"
+             xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
+             x:Class="SmallBazar.Views.SearchPage"
+             x:DataType="viewModels:GlobalViewModel"
+             Title="Search">
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <toolkit:InvertedBoolConverter x:Key="InvertedBoolConverter" />
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid>
+
+        <VerticalStackLayout Spacing="20" Margin="0,35,0,0">
+            <!-- search mode selection -->
+            <Frame Margin="10,5,10,5">
+                <HorizontalStackLayout HorizontalOptions="Center" Padding="5">
+                    <Label Text="Search mode:" VerticalOptions="Center" Margin="0,0,10,0"/>
+                    <Picker Title="" 
+                            ItemsSource="{Binding SearchModes}" 
+                            SelectedItem="{Binding CurrentSearchMode}"
+                            HorizontalTextAlignment="Start"
+                            VerticalOptions="Center" WidthRequest="150" 
+                            HeightRequest="40"
+                            Margin="0,0,10,0"
+                            SelectedIndexChanged="Picker_SelectedIndexChanged" />
+                </HorizontalStackLayout>
+            </Frame>
+
+            <!-- description search -->
+            <VerticalStackLayout HorizontalOptions="Center">
+                <Label Text="Description filter" IsEnabled="{Binding IsDescriptionSearchMode}" />
+                <SearchBar x:Name="searchBar" HeightRequest="40" 
+                              IsEnabled="{Binding IsDescriptionSearchMode}"
+                              SearchCommand="{Binding PerformSearchCommand}"
+                              SearchCommandParameter="{Binding Source={x:Reference searchBar}, Path=Text}"
+                              Placeholder="" 
+                              HorizontalOptions="Start" 
+                              HorizontalTextAlignment="Start" 
+                              VerticalOptions="Center" WidthRequest="300"
+                              Margin="10,0,0,0"/>
+            </VerticalStackLayout>
+
+            <!-- category search 
+            <Picker Title="Category filter" IsEnabled="{Binding IsCategorySearchMode}"
+             SelectedItem="{Binding SelectedCategory}"
+             ItemsSource="{Binding Categories}" 
+             ItemDisplayBinding="{Binding Name}"
+             HorizontalOptions="Center" HorizontalTextAlignment="Start" VerticalOptions="Center" 
+             HeightRequest="40"
+             Margin="10,0,0,0"
+             WidthRequest="300">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior EventName="SelectedIndexChanged" Command="{Binding PerformSearchCommand}" />
+                </Picker.Behaviors>
+            </Picker>
+            -->
+
+
+            <!-- area search -->
+            <Picker Title="Area filter" IsEnabled="{Binding IsAreaSearchMode}"
+             SelectedItem="{Binding SelectedAreaForSearch}"
+             ItemsSource="{Binding Areas}" 
+             ItemDisplayBinding="{Binding Name}"
+             HorizontalOptions="Center" HorizontalTextAlignment="Start" VerticalOptions="Center" 
+             Margin="10,0,0,0"
+             WidthRequest="300">
+                <Picker.Behaviors>
+                    <toolkit:EventToCommandBehavior EventName="SelectedIndexChanged" Command="{Binding PerformSearchCommand}" />
+                </Picker.Behaviors>
+                <Picker.HeightRequest>
+                    <OnPlatform x:TypeArguments="x:Double">
+                        <On Platform="Android" Value="40" />
+                        <On Platform="WinUI" Value="70" />
+                    </OnPlatform>
+                </Picker.HeightRequest>
+            </Picker>
+
+            <BoxView WidthRequest="300" HeightRequest="2" Margin="10,0,0,10" Color="Orange"/>
+
+            <Label Text="{Binding BoxCount, StringFormat='Currently selected: {0} item(s)'}" HorizontalOptions="Center" FontAttributes="Bold"/>
+            <HorizontalStackLayout IsVisible="{Binding IsFiltered}" 
+                                   HorizontalOptions="Center" VerticalOptions="Center">
+                <Label Text="Filter is active" VerticalOptions="Center"/>
+                <ImageButton Source="filtergreen.png" Command="{Binding ClearFilterCommand }" />
+            </HorizontalStackLayout>
+            <Label Text="Data are not filtered." 
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   IsVisible="{Binding IsFiltered, Converter={StaticResource InvertedBoolConverter}}" />
+
+
+            <BoxView WidthRequest="300" HeightRequest="2" Margin="10,0,0,10" Color="Orange"/>
+            <Button Text="AI Category Report" WidthRequest="200"  BackgroundColor="#FFD97F" TextColor="Black"
+                    Command="{Binding AIReportCommand}"/>
+
+            <!-- todo create a simple list of boxes reusing the AI report generator without calling OpenAPI -->
+            <Button Text="Simple Box List" WidthRequest="200"  BackgroundColor="#D3FF7F" TextColor="Black"
+                    Command="{Binding AIReportCommand}" IsVisible="false"/>
+
+        </VerticalStackLayout>
+    </Grid>
+</ContentPage>
