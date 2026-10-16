@@ -4,7 +4,7 @@
 
 Migrer SmallBazar vers .NET 10, .NET MAUI 10 et des dépendances stables compatibles sur Android et Windows. Conserver les fonctions utiles, avec une simplification explicitement demandée : supprimer la gestion persistée des anciennes catégories BigBazar et leur jointure avec les boîtes. Livrer une application qui démarre, retrouve les boîtes et emplacements existants et peut être mise à jour sans perte de ces données.
 
-Date de création : 16 octobre 2026. Statut : migration en cours ; étapes 01 à 04 réalisées avec les limites de validation consignées ; étape 05 implémentée et limites documentées ; lot 06A terminé ; lot 06B implémenté et testé, recette interactive restante. Voir le [compte rendu des étapes 01 à 04](Spec-001-Etapes-01-04.md).
+Date de création : 16 octobre 2026. Statut : migration en cours ; étapes 01 à 04 réalisées avec les limites de validation consignées ; étape 05 implémentée et limites documentées ; lot 06A terminé ; lot 06B implémenté et testé, recette interactive restante ; étape 07 terminée, compilation Release Android/Windows validée. Voir le [compte rendu des étapes 01 à 04](Spec-001-Etapes-01-04.md).
 
 Référence : [audit de modernisation](../AUDIT-MODERNISATION.md).
 
@@ -220,14 +220,16 @@ Prérequis : lot 06A validé. Ce lot constitue le changement de schéma explicit
 
 Prérequis : étapes 04 et 06.
 
-- [ ] Conserver OpenAI 2.4.0, le code d'accès, la méthode de connexion, le stockage de clé, le modèle et le prompt actuels.
-- [ ] Vérifier la compilation du code et des vues du rapport ; ne corriger que les incompatibilités imposées par .NET 10/MAUI et documenter ces adaptations.
-- [ ] Ne changer le paquet OpenAI que si une incompatibilité de compilation démontrée empêche son maintien ; retenir alors la correction minimale compatible.
-- [ ] Maintenir en place cache, rapport, export HTML et partage, sans refactorisation ni amélioration de leur traitement.
-- [ ] Retirer Newtonsoft.Json si l'absence d'usage est confirmée ; sinon appliquer un correctif stable compatible.
-- [ ] Consigner le report de la refonte OpenAI, de la connexion, des améliorations de timeout, du ping, du parseur et du rendu à une phase ultérieure ; ne pas construire une campagne de tests distante pour cette phase.
+- [x] Conserver OpenAI 2.4.0, le code d'accès, la méthode de connexion, le stockage de clé, le modèle et le prompt actuels.
+- [x] Vérifier la compilation du code et des vues du rapport ; ne corriger que les incompatibilités imposées par .NET 10/MAUI et documenter ces adaptations.
+- [x] Ne changer le paquet OpenAI que si une incompatibilité de compilation démontrée empêche son maintien ; retenir alors la correction minimale compatible.
+- [x] Maintenir en place cache, rapport, export HTML et partage, sans refactorisation ni amélioration de leur traitement.
+- [x] Retirer Newtonsoft.Json si l'absence d'usage est confirmée ; sinon appliquer un correctif stable compatible.
+- [x] Consigner le report de la refonte OpenAI, de la connexion, des améliorations de timeout, du ping, du parseur et du rendu à une phase ultérieure ; ne pas construire une campagne de tests distante pour cette phase.
 
 **Validation :** le code OpenAI existant compile sur les deux plateformes avec un minimum de changements. La recette distante OpenAI et la refonte de cette intégration ne sont pas des conditions de clôture de la phase 1. Aucun appel payant requis.
+
+**État de l'étape : terminée.** OpenAI 2.4.0 et l'intégration existante compilent sans adaptation supplémentaire. Newtonsoft.Json retiré après confirmation de son absence d'usage ; absence également vérifiée dans le graphe restauré. Compilations Release Windows non empaqueté et Android avec AOT/trimming réussies. Aucun appel distant effectué. Voir le [compte rendu 07](Spec-001-Etape-07.md).
 
 ### Étape 08 — Finaliser les adaptations Android
 
@@ -310,7 +312,7 @@ Mettre à jour le statut et renseigner la preuve après chaque étape : commande
 | 05 — Vues et commandes | Implémentée, recette interactive à compléter | Border, contexte explicite du filtre, bindings compilés et API Async adaptés. Compilations Debug Android et Windows non empaqueté réussies ; filtres, tri, sélection, précédent/suivant et modales essayés sur émulateur Android avec données synthétiques. Recette Windows restante. Voir le [compte rendu](Spec-001-Etape-05.md). |
 | 06A — Paquet SQLite et sauvegardes | Terminé | sqlite-net-pcl 1.11.285 ; 21 tests natifs réussis ; recettes Android 4/16 Ko et Windows confirmées. Dernier APK entièrement reconstruit : démarrage à froid, trois boîtes conservées, Save et alignement natif vérifiés. [Compte rendu](Spec-001-Etape-06A.md). |
 | 06B — Suppression des anciennes catégories | Implémenté, recette interactive à compléter | Migration transactionnelle version 1 avec instantané préalable ; 25 tests natifs synthétiques puis sur copies 72/71/30 réussis. Release Android/Windows compilées. Export/suppression UI et échange interplateforme restants. [Compte rendu](Spec-001-Etape-06B.md). |
-| 07 — Dépendances et compilation OpenAI | À faire | Intégration actuelle conservée ; refonte et recette distante hors phase 1. |
+| 07 — Dépendances et compilation OpenAI | Terminée | Newtonsoft.Json inutilisé retiré ; OpenAI 2.4.0, accès, clé, modèle, prompt et rapport conservés sans adaptation. Release Android (AOT/trimming) et Windows non empaqueté : zéro erreur. Refonte et recette distante reportées. [Compte rendu](Spec-001-Etape-07.md). |
 | 08 — Android | À faire | — |
 | 09 — Publication Windows | À faire | — |
 | 10 — Recette et clôture | À faire | — |
