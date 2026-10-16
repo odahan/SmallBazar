@@ -53,6 +53,11 @@
     <Color x:Key="BackgroundLight">White</Color>
     <Color x:Key="TextDark">White</Color>
     <Color x:Key="TextLight">Black</Color>
+    <Color x:Key="SelectedItemLight">LightSkyBlue</Color>
+    <Color x:Key="SelectedItemDark">#244A65</Color>
+    <Color x:Key="BoxNumberLight">#9F1B1B</Color>
+    <Color x:Key="BoxNumberDark">#FF9D96</Color>
+    <Color x:Key="SectionHeadingLight">#805A14</Color>
 
     <Color x:Key="Yellow100Accent">#F7B548</Color>
     <Color x:Key="Yellow200Accent">#FFD590</Color>

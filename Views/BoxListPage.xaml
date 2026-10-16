@@ -25,21 +25,21 @@
                                 <VisualStateGroup Name="CommonStates">
                                     <VisualState Name="Normal">
                                         <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="White"></Setter>
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState Name="Selected">
                                         <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="LightSkyBlue"></Setter>
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SelectedItemLight}, Dark={StaticResource SelectedItemDark}}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
 
                             <Label Grid.Column="0" Text="{Binding Number, StringFormat='{0,3}'}" 
-                                   TextColor="Red" FontAttributes="Bold"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource BoxNumberLight}, Dark={StaticResource BoxNumberDark}}" FontAttributes="Bold"/>
                             <Label Grid.Column="1" Text="{Binding Description}" LineBreakMode="MiddleTruncation" Margin="5,0,0,0"
-                                   TextColor="Black"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"/>
                         </Grid>
                     </DataTemplate>
                 </utils:PlatformDataTemplateSelector.DefaultTemplate>
@@ -55,21 +55,21 @@
                                 <VisualStateGroup Name="CommonStates">
                                     <VisualState Name="Normal">
                                         <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="White"></Setter>
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                     <VisualState Name="Selected">
                                         <VisualState.Setters>
-                                            <Setter Property="BackgroundColor" Value="LightSkyBlue"></Setter>
+                                            <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource SelectedItemLight}, Dark={StaticResource SelectedItemDark}}" />
                                         </VisualState.Setters>
                                     </VisualState>
                                 </VisualStateGroup>
                             </VisualStateManager.VisualStateGroups>
 
                             <Label Grid.Column="0" Text="{Binding Number, StringFormat='{0,3}'}" 
-                                   TextColor="Red" FontAttributes="Bold"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource BoxNumberLight}, Dark={StaticResource BoxNumberDark}}" FontAttributes="Bold"/>
                             <Label Grid.Column="1" Text="{Binding DescriptionForDisplay}" LineBreakMode="MiddleTruncation" Margin="5,0,0,0"
-                                   TextColor="Black"/>
+                                   TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"/>
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer NumberOfTapsRequired="2" 
                                                       Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:GlobalViewModel}}, Path=DoubleTapCommand, x:DataType=viewModels:GlobalViewModel}"
@@ -89,7 +89,7 @@
                         SelectionMode="Single"
                         SelectedItem="{Binding SelectedBox, Mode=TwoWay}"
                         SelectionChanged="CollectionView_SelectionChanged"
-                        BackgroundColor="White"
+                        BackgroundColor="{AppThemeBinding Light={StaticResource BackgroundLight}, Dark={StaticResource BackgroundDark}}"
                         ItemTemplate="{StaticResource PlatformTemplateSelector}">
         </CollectionView>
 

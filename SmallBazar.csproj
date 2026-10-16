@@ -55,6 +55,12 @@
         <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     </PropertyGroup>
 
+    <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+        <ApplicationId>com.companyname.smallbazar</ApplicationId>
+        <ApplicationDisplayVersion>1.5.8</ApplicationDisplayVersion>
+        <ApplicationVersion>3</ApplicationVersion>
+    </PropertyGroup>
+
     <ItemGroup>
         <!-- App Icon -->
         <MauiIcon Include="Resources\appicon.svg" Color="#00A6F4" />
@@ -130,4 +136,21 @@
         <Generator>MSBuild:Compile</Generator>
       </MauiXaml>
     </ItemGroup>
+    <Target Name="GenerateAndroidBackupRules"
+            BeforeTargets="_ComputeAndroidResourcePaths"
+            Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+        <PropertyGroup>
+            <_BackupRulesDirectory>$(IntermediateOutputPath)backup-rules/</_BackupRulesDirectory>
+            <_AutoBackupRules>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/Platforms/Android/BackupRules/auto_backup_rules.xml.in').Replace('__APPLICATION_ID__', '$(ApplicationId)'))</_AutoBackupRules>
+            <_DataExtractionRules>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/Platforms/Android/BackupRules/data_extraction_rules.xml.in').Replace('__APPLICATION_ID__', '$(ApplicationId)'))</_DataExtractionRules>
+        </PropertyGroup>
+        <MakeDir Directories="$(_BackupRulesDirectory)" />
+        <WriteLinesToFile File="$(_BackupRulesDirectory)auto_backup_rules.xml" Lines="$(_AutoBackupRules)" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+        <WriteLinesToFile File="$(_BackupRulesDirectory)data_extraction_rules.xml" Lines="$(_DataExtractionRules)" Overwrite="true" WriteOnlyWhenDifferent="true" Encoding="UTF-8" />
+        <ItemGroup>
+            <AndroidResource Include="$(_BackupRulesDirectory)auto_backup_rules.xml" Link="Resources/xml/auto_backup_rules.xml" />
+            <AndroidResource Include="$(_BackupRulesDirectory)data_extraction_rules.xml" Link="Resources/xml/data_extraction_rules.xml" />
+            <FileWrites Include="$(_BackupRulesDirectory)auto_backup_rules.xml;$(_BackupRulesDirectory)data_extraction_rules.xml" />
+        </ItemGroup>
+    </Target>
 </Project>

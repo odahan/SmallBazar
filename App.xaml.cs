@@ -8,7 +8,7 @@
         {
             InitializeComponent();
             this.services = services;
-            UserAppTheme = PlatformAppTheme;
+            UserAppTheme = AppTheme.Unspecified;
         }
 
         protected override Window CreateWindow(IActivationState activationState)

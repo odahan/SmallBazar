@@ -18,7 +18,7 @@
                 <Button Text="Del.Logs" Command="{Binding DeleteLogsCommand}" HeightRequest="48"/>
                 <Button Text="Reload"  Command="{Binding GetLogCommand}" HeightRequest="48"/>
                 <Button Text="Share" Command="{Binding ShareLogFilesCommand}" HeightRequest="48" />
-                <Button Text="Close" Command="{Binding CloseCommand}" HeightRequest="48" BackgroundColor="#95CEFF"/>
+                <Button Text="Close" Command="{Binding CloseCommand}" HeightRequest="48" BackgroundColor="#95CEFF" TextColor="Black"/>
             </StackLayout>
         </StackLayout>
     </Grid>

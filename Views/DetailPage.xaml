@@ -24,13 +24,13 @@
         <Grid Margin="0,0,0,0" 
               IsVisible="{Binding SelectedBox, Converter={StaticResource IsNotNullConverter}}">
             <Grid.RowDefinitions>
-                <RowDefinition Height="90"/>
+                <RowDefinition Height="{OnPlatform Android=Auto, Default=90}"/>
                 <!-- R0 box id -->
                 <RowDefinition Height="*"/>
                 <!-- R1 description -->
-                <RowDefinition Height="60"/>
+                <RowDefinition Height="{OnPlatform Android=Auto, Default=60}"/>
                 <!-- R2 storage -->
-                <RowDefinition Height="60"/>
+                <RowDefinition Height="{OnPlatform Android=Auto, Default=60}"/>
                 <!-- R3 buttons -->
 
             </Grid.RowDefinitions>
@@ -61,7 +61,7 @@
                                StrokeShape="RoundRectangle 8">
                             <Border.Triggers>
                                 <DataTrigger TargetType="Border" Binding="{Binding IsPreviousOk}" Value="False">
-                                    <Setter Property="BackgroundColor" Value="Silver"/>
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"/>
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
                             </Border.Triggers>
@@ -80,7 +80,7 @@
                                StrokeShape="RoundRectangle 8" >
                             <Border.Triggers>
                                 <DataTrigger TargetType="Border" Binding="{Binding IsNextOk}" Value="False">
-                                    <Setter Property="BackgroundColor" Value="Silver"/>
+                                    <Setter Property="BackgroundColor" Value="{AppThemeBinding Light={StaticResource Gray200}, Dark={StaticResource Gray600}}"/>
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
                             </Border.Triggers>
@@ -102,8 +102,8 @@
             <Border Style="{StaticResource CardBorderStyle}" Grid.Row="1" Padding="0" BackgroundColor="Transparent"
              Stroke="Transparent">
                 <Editor Text="{Binding Description}" 
-                  BackgroundColor="{StaticResource  Secondary}"
-                  TextColor="{StaticResource Black}"
+                  BackgroundColor="{AppThemeBinding Light={StaticResource Secondary}, Dark={StaticResource Gray900}}"
+                  TextColor="{AppThemeBinding Light={StaticResource TextLight}, Dark={StaticResource TextDark}}"
                   FontAttributes="Bold" FontSize="18"
                   />
             </Border>
@@ -152,7 +152,7 @@
                              IsEnabled="{Binding IsModified}"
                              Grid.Column="1"/>
 
-                    <Button  Command="{Binding SaveCommand}" BackgroundColor="DeepSkyBlue" 
+                    <Button  Command="{Binding SaveCommand}" BackgroundColor="DeepSkyBlue" TextColor="Black"
                              HeightRequest="40" WidthRequest="100" Text="Save" CornerRadius="20" 
                              IsEnabled="{Binding IsModified}" BorderColor="#FF790E" BorderWidth="2"
                              VerticalOptions="Center" HorizontalOptions="End" 

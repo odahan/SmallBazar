@@ -1,6 +1,8 @@
 param(
     [ValidateSet('Debug', 'Release')]
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+    [ValidateRange(1, 2100000000)]
+    [int]$ApplicationVersion = 3
 )
 
 $ErrorActionPreference = 'Stop'
@@ -16,7 +18,8 @@ try {
         '-t:Rebuild',
         '-f', 'net10.0-android',
         '-c', $Configuration,
-        "-p:ApplicationId=$validationApplicationId"
+        "-p:ApplicationId=$validationApplicationId",
+        "-p:ApplicationVersion=$ApplicationVersion"
     )
     if ($Configuration -eq 'Debug') {
         $buildArguments += '-p:EmbedAssembliesIntoApk=true'

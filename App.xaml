@@ -6,6 +6,8 @@
     xmlns:d="http://schemas.microsoft.com/dotnet/2021/maui/design"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:SmallBazar"
+    xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+    android:Application.WindowSoftInputModeAdjust="Resize"
     mc:Ignorable="d">
     <Application.Resources>
         <ResourceDictionary>

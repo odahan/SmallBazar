@@ -15,7 +15,7 @@ namespace SmallBazar
         public override void OnCreate()
         {
             base.OnCreate();
-            AppCompatDelegate.DefaultNightMode = AppCompatDelegate.ModeNightNo;
+            AppCompatDelegate.DefaultNightMode = AppCompatDelegate.ModeNightFollowSystem;
         }
 
         protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
