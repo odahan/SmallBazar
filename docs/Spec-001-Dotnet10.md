@@ -4,17 +4,17 @@
 
 Migrer SmallBazar vers .NET 10, .NET MAUI 10 et des dépendances stables compatibles sur Android et Windows. Conserver les fonctions utiles, avec une simplification explicitement demandée : supprimer la gestion persistée des anciennes catégories BigBazar et leur jointure avec les boîtes. Livrer une application qui démarre, retrouve les boîtes et emplacements existants et peut être mise à jour sans perte de ces données.
 
-Date de création : 16 octobre 2026. Statut : migration en cours ; étapes 01 à 04 réalisées avec les limites de validation consignées ; étape 05 implémentée et limites documentées ; lot 06A terminé ; lot 06B implémenté et testé, recette interactive restante ; étape 07 terminée, compilation Release Android/Windows validée. Voir le [compte rendu des étapes 01 à 04](Spec-001-Etapes-01-04.md).
+Date de création : 16 octobre 2026. Statut : migration en cours ; étapes 01 à 04 réalisées avec les limites de validation consignées ; étape 05 implémentée et limites documentées ; lot 06A terminé ; lot 06B implémenté et testé, recette interactive restante ; étape 07 terminée, compilation Release Android/Windows validée ; étape 08 terminée avec exception de signature autorisée ; étape 08 BIS définie, à implémenter dans une autre conversation ; étapes 09 et 10 maintenues en fin de plan. Voir le [compte rendu des étapes 01 à 04](Spec-001-Etapes-01-04.md).
 
 Référence : [audit de modernisation](../AUDIT-MODERNISATION.md).
 
-Périmètre révisé le 16 octobre 2026 : paquet SQLite vérifié dans la documentation Microsoft ; suppression de `Categories` et `BoxCats` prévue dans cette phase ; intégration OpenAI conservée telle quelle, avec seulement les adaptations indispensables à la compilation.
+Périmètre révisé le 16 octobre 2026 : paquet SQLite vérifié dans la documentation Microsoft ; suppression de `Categories` et `BoxCats` prévue dans cette phase. Après le maintien de la compilation OpenAI à l'étape 07, insertion de l'étape 08 BIS : remplacer la clé API par une identification ChatGPT avec utilisation du forfait éligible, en conservant le fonctionnement du classement mémorisé et du rapport HTML. Ordre final : 08 → 08 BIS → 09 → 10 ; les vérifications encore ouvertes des étapes 05 et 06B restent à solder avant clôture.
 
 ## 2. Périmètre et règles
 
 - Conserver les parcours boîtes, emplacements, recherche, sauvegarde/restauration, export et maintenance. Retirer les vestiges de gestion manuelle des catégories, y compris leurs références dans l'export et les données de démonstration.
 - Conserver l'architecture MAUI native, le MVVM Toolkit, les onglets et les CollectionView. Adapter les services et ViewModels lorsque la migration l'exige.
-- Conserver l'interface en anglais. Garder l'intégration OpenAI, le paquet actuel, le modèle, le prompt, la connexion et le rapport existants ; ne faire que les corrections indispensables à leur compilation sous .NET 10. Leur refonte est reportée à une phase ultérieure.
+- Conserver l'interface en anglais. Le gel de l'intégration OpenAI s'applique au lot 07 déjà réalisé. L'étape 08 BIS autorise le remplacement de la connexion par clé API et les adaptations de transport, de modèle et de dépendances nécessaires à l'utilisation du forfait ChatGPT. Préserver le sens du prompt, le classement multiple, les données IA mémorisées et la génération HTML locale ; toute refonte supplémentaire reste hors périmètre.
 - Préserver le nom de base `BigBazar.db3`, les données et le schéma utiles de `Boxes` et `Areas`. Supprimer uniquement les tables métier historiques `Categories` et `BoxCats` par une migration versionnée, testée et précédée d'une sauvegarde. Les catégories du rapport IA et son cache ne sont pas ces anciennes tables et restent en place.
 - Conserver les identités et signatures nécessaires aux mises à jour Android et Windows. Ne pas désinstaller ou réinitialiser l'application installée pour contourner un problème.
 - Utiliser des versions stables et explicites. Vérifier leur compatibilité avant de les figer.
@@ -22,7 +22,7 @@ Périmètre révisé le 16 octobre 2026 : paquet SQLite vérifié dans la docume
 - Chaque étape donne lieu à un changement identifiable, une validation et une mise à jour du suivi de ce document. Ne pas annoncer une plateforme validée sur la seule base d'une compilation de l'autre plateforme.
 - Exécuter les essais de données sur des copies. Ne pas ajouter les bases personnelles, clés API, certificats privés ou sauvegardes au dépôt Git.
 
-Hors périmètre : nouvelles fonctionnalités, refonte graphique, passage à Shell ou Blazor, changement de bibliothèque d'accès SQLite vers ADO.NET ou EF Core, NativeAOT, refonte générale du MVVM et optimisations sans rapport avec la migration. La réécriture OpenAI, l'authentification, les améliorations réseau, le parseur et le rendu du rapport IA sont également reportés. Les anomalies préexistantes sont corrigées dans des changements distincts lorsqu'elles bloquent les fonctions conservées.
+Hors périmètre : nouvelles fonctionnalités, refonte graphique, passage à Shell ou Blazor, changement de bibliothèque d'accès SQLite vers ADO.NET ou EF Core, NativeAOT, refonte générale du MVVM et optimisations sans rapport avec la migration. L'authentification ChatGPT et les adaptations réseau nécessaires au rapport entrent dans l'étape 08 BIS. La refonte générale du rapport, l'enrichissement fonctionnel de son parseur et de son rendu, la modification de sa stratégie de classement et les autres optimisations IA restent reportés. Les anomalies préexistantes sont corrigées dans des changements distincts lorsqu'elles bloquent les fonctions conservées.
 
 ## 3. État de départ
 
@@ -86,7 +86,7 @@ Les versions suivantes proviennent de l'audit du 16 octobre 2026. Les revérifie
 | Microsoft.Extensions.Logging.Debug | Correctif stable 10.0 compatible, version exacte | 03 |
 | sqlite-net-pcl | Paquet confirmé par Microsoft ; version stable 1.11.285 relevée, graphe natif à valider | 06A |
 | SQLitePCLRaw.bundle_green | Retrait après validation de la nouvelle chaîne native du paquet retenu | 06A |
-| OpenAI | Conserver 2.4.0 ; changement uniquement si une incompatibilité de compilation démontrée l'impose | 07 |
+| OpenAI | 2.4.0 conservé au lot 07 ; réévaluer le SDK ou utiliser un client HTTP adapté à Responses au lot 08 BIS, avec justification et versions explicites | 07 / 08 BIS |
 | Controls.Compatibility / Newtonsoft.Json | Retrait si leur absence d'utilisation est confirmée | 03 / 07 |
 
 Les changements du socle MAUI sont traités ensemble lorsqu'ils sont nécessaires pour compiler. La modernisation SQLite est isolée pour rendre les régressions de données identifiables. Si l'ancienne chaîne SQLite bloque le démarrage en .NET 10, traiter l'étape 06 avant de valider l'étape 04 et consigner cette dépendance dans le suivi.
@@ -227,7 +227,7 @@ Prérequis : étapes 04 et 06.
 - [x] Retirer Newtonsoft.Json si l'absence d'usage est confirmée ; sinon appliquer un correctif stable compatible.
 - [x] Consigner le report de la refonte OpenAI, de la connexion, des améliorations de timeout, du ping, du parseur et du rendu à une phase ultérieure ; ne pas construire une campagne de tests distante pour cette phase.
 
-**Validation :** le code OpenAI existant compile sur les deux plateformes avec un minimum de changements. La recette distante OpenAI et la refonte de cette intégration ne sont pas des conditions de clôture de la phase 1. Aucun appel payant requis.
+**Validation du lot 07 :** le code OpenAI existant compile sur les deux plateformes avec un minimum de changements ; aucun appel distant requis pour ce lot. Le report initial de la connexion est désormais levé par l'étape 08 BIS ci-dessous, dont les validations deviennent nécessaires avant la clôture finale.
 
 **État de l'étape : terminée.** OpenAI 2.4.0 et l'intégration existante compilent sans adaptation supplémentaire. Newtonsoft.Json retiré après confirmation de son absence d'usage ; absence également vérifiée dans le graphe restauré. Compilations Release Windows non empaqueté et Android avec AOT/trimming réussies. Aucun appel distant effectué. Voir le [compte rendu 07](Spec-001-Etape-07.md).
 
@@ -235,19 +235,89 @@ Prérequis : étapes 04 et 06.
 
 Prérequis : étapes 05 à 07.
 
-- [ ] Vérifier l'API cible, le SDK Android et le JDK retenus pour la chaîne .NET 10.
-- [ ] Conserver initialement le minimum API 21 ; si une dépendance impose de le relever ou si API 24 est retenue, documenter les appareils exclus et faire valider ce changement de compatibilité avant livraison.
-- [ ] Vérifier zones sûres, barres système, clavier, rotation, Retour et modales sur appareil/émulateur.
-- [ ] Vérifier la déclaration `queries` mailto dans le manifeste fusionné et l'ouverture du client mail.
-- [ ] Tester restauration depuis un fournisseur de documents et partage des sauvegardes/rapports.
-- [ ] Vérifier mise à jour, stockage sécurisé et comportement de la sauvegarde Android.
-- [ ] Conserver l'ApplicationId et la signature ; augmenter le code de version selon la version réellement distribuée.
+- [x] Vérifier l'API cible, le SDK Android et le JDK retenus pour la chaîne .NET 10.
+- [x] Conserver initialement le minimum API 21 ; si une dépendance impose de le relever ou si API 24 est retenue, documenter les appareils exclus et faire valider ce changement de compatibilité avant livraison.
+- [x] Vérifier zones sûres, barres système, clavier, rotation, Retour et modales sur appareil/émulateur.
+- [x] Vérifier la déclaration `queries` mailto dans le manifeste fusionné et l'ouverture du client mail.
+- [x] Tester restauration depuis un fournisseur de documents et partage des sauvegardes/rapports.
+- [x] Vérifier mise à jour, stockage sécurisé et comportement de la sauvegarde Android ; exclusion SecureStorage testée localement, ancienne clé abandonnée avec accord utilisateur et connexion OpenAI reportée.
+- [x] Conserver l'ApplicationId Android réel et augmenter le code de version selon l’installation relevée ; exception de nouvelle signature et réinstallation explicitement autorisée après sauvegardes et contrôle de restauration.
 
 **Validation :** APK/AAB Release installable, démarrage et principaux parcours vérifiés, compatibilité native contrôlée. L'échange de sauvegardes reste fonctionnel.
 
+**État de l'étape : terminée avec exception de signature autorisée.** API cible 36, JDK 21.0.8, minimum 21 conservé. Zones sûres, clavier, paysage, mailto et sauvegarde sélective adaptés ; crash API 21 et contrastes du thème sombre corrigés. Release Android/Windows réussies. Recettes API 21/35/36, dont pages de 16 Ko, et smartphone API 33 réalisées. Identité Android réelle `com.companyname.smallbazar`, version 1.5.8/code 3 installée. Ancienne clé de signature irrécupérable : réinstallation autorisée après sauvegardes, restauration de la source Windows (72 boîtes/11 emplacements) et comparaison SQL intégrale réussies sur le téléphone. Mise à jour suivante code 2 → 3 avec même nouvelle signature réussie, compteur 72 conservé. Nouveau magasin de signature sauvegardé hors Git. Ancienne clé OpenAI abandonnée avec accord utilisateur ; refonte de connexion reportée. Voir le [compte rendu 08](Spec-001-Etape-08.md).
+
+### Étape 08 BIS — Connecter AI Category Report au forfait ChatGPT
+
+Prérequis : étape 08 réalisée, sauvegardes conservées. Étape définie après discussion avec l'utilisateur le 16 octobre 2026 ; implémentation dans une autre conversation. Elle précède la publication Windows de l'étape 09 et la recette finale de l'étape 10.
+
+**Objectif :** supprimer l'utilisation et la saisie d'une clé API OpenAI dans SmallBazar, au profit de « Sign in with ChatGPT » et de l'autorisation d'utiliser le forfait ChatGPT éligible. Réaliser cette évolution sur Windows et Android sans changer la politique d'économie des appels ni réintroduire la gestion manuelle des anciennes catégories BigBazar.
+
+#### Fonction du rapport et invariants
+
+Le rapport permet de retrouver les boîtes par catégorie ; une boîte peut appartenir à plusieurs catégories. L'IA reçoit les descriptions et numéros de toutes les boîtes et renvoie un classement compact : catégories et numéros de boîtes correspondants. Le code local construit le HTML et y associe les informations nécessaires à l'affichage. L'IA ne génère pas le HTML.
+
+Ce sont les données du dernier classement IA réussi qui sont mémorisées, avec leur horodatage, et non le fichier HTML comme source de référence. Chaque ouverture reconstruit le HTML à la volée à partir de ce classement. L'horodatage visible reste celui de l'analyse IA sauvegardée ; ouvrir, exporter ou reconstruire le HTML ne le modifie pas. Conserver les classements et dates déjà présents lorsqu'ils sont lisibles ; ne pas les effacer au changement de connexion.
+
+| Déclencheur | Appel OpenAI | Comportement attendu |
+| --- | --- | --- |
+| Ouverture du rapport avec un classement mémorisé | Aucun | Reconstruire et afficher le HTML localement, avec la date de l'analyse sauvegardée. |
+| Ouverture du rapport sans classement mémorisé | Une analyse complète après connexion si nécessaire | Classer toutes les boîtes, valider et mémoriser le résultat daté, puis construire le HTML. |
+| Appui sur Refresh | Une analyse complète après connexion si nécessaire | Classer toutes les boîtes et remplacer le classement daté uniquement après réussite, puis reconstruire le HTML. |
+| Création, modification ou suppression d'une boîte, même répétée | Aucun | Conserver le classement et sa date jusqu'au Refresh choisi par l'utilisateur. |
+| Consultation, recherche dans le rapport ou export/partage HTML | Aucun | Utiliser le classement mémorisé et le traitement local existant. |
+
+L'analyse initiale est déclenchée à l'ouverture du rapport sans données IA, jamais au simple démarrage de l'application. Les modifications successives ne provoquent ni recalcul automatique, ni invalidation du classement, ni appel différé en arrière-plan. L'utilisateur peut conserver un rapport ancien après une petite modification ou effectuer un seul Refresh après de nombreuses modifications.
+
+La consultation d'un classement sauvegardé doit fonctionner hors ligne, déconnecté de ChatGPT ou avec une session expirée. Une annulation de connexion ou de génération, une limite de forfait, une erreur réseau, un refus du modèle ou un flux incomplet ne remplacent ni n'effacent le classement précédent et son horodatage. Si aucun classement n'existe, présenter cet état et une possibilité de réessai explicite, sans boucle d'appels. Une donnée mémorisée illisible doit produire une erreur observable sans être écrasée silencieusement.
+
+#### Lot A — Valider la faisabilité de la connexion
+
+- [ ] Revérifier la documentation officielle au début de l'implémentation : éligibilité du compte et de SmallBazar dans son cadre d'usage personnel local, disponibilité du service et restrictions du forfait. Ne pas promettre l'accès à tout type de compte ou de plan ; documenter séparément les conditions d'une éventuelle distribution commerciale.
+- [ ] Prototyper le parcours officiel dans le navigateur système avec OAuth/OIDC et PKCE, validation du retour et autorisation effective d'utiliser le forfait, sans clé API ni secret client embarqué. La simple identification ne suffit pas à autoriser l'inférence.
+- [ ] Vérifier le retour HTTP local sur `127.0.0.1` exigé par le parcours actuellement documenté. Sur Windows, vérifier l'application de développement ; sur Android, vérifier sur appareil le passage en arrière-plan pendant la connexion, la réception du retour et la reprise de l'interface, notamment sur Xiaomi. Ne pas supposer qu'un schéma URI personnalisé remplace ce retour.
+- [ ] Réaliser sur chaque plateforme une requête minimale avec données synthétiques pour vérifier l'utilisation effective du forfait. Une connexion réussie ou une liste de modèles ne prouve pas à elle seule qu'une génération est autorisée. L'utilisateur saisit lui-même ses identifiants chez OpenAI.
+
+**Jalon de faisabilité :** consigner les résultats distincts Windows/Android avant de remplacer le parcours existant. Le support Android est une hypothèse technique à valider, pas un résultat déjà acquis. Si une restriction officielle ou un échec du parcours empêche une plateforme, documenter le blocage et convenir de l'adaptation ; ne pas substituer silencieusement une clé API, un intermédiaire serveur ou des endpoints internes ChatGPT. Le parcours Windows empaqueté sera confirmé à l'étape 09.
+
+#### Lot B — Intégrer la connexion et adapter l'appel
+
+- [ ] Remplacer les commandes Enter Key / Check Key / Clear Key par un parcours en anglais permettant de se connecter, de voir le compte actif, de se déconnecter et d'accéder à la gestion d'usage ChatGPT. Utiliser l'action officielle Continue with ChatGPT et les indications de consommation du forfait.
+- [ ] Ne demander une connexion que lorsqu'une génération en a besoin. Un compte non éligible, une autorisation refusée ou une limite atteinte donnent une explication exploitable ; aucune bascule automatique vers une facturation API séparée.
+- [ ] Gérer la session, le renouvellement et la révocation. Protéger les jetons OAuth dans le stockage sécurisé local, en dehors de la base métier, du classement mémorisé, des exports, des sauvegardes transférables et des logs. La suppression de la saisie de clé API ne supprime pas le besoin de protéger les jetons. Une session expirée après une longue période sans utilisation doit permettre une reconnexion sans perte du rapport.
+- [ ] Retirer l'utilisation des anciennes clés API et les commandes/services devenus inutiles après validation du nouveau parcours, sans effacer le classement mémorisé ni les données métier. Ne pas réutiliser les identifiants d'une autre application ou de Codex.
+- [ ] Remplacer l'appel Chat Completions actuel par le parcours Responses officiel autorisé pour le forfait. Dans le contrat documenté à cette date : `store: false`, `stream: true`, instructions compatibles et modèle disponible pour le compte connecté. Vérifier les champs acceptés et le SDK .NET retenu ; un client HTTP adapté est possible sans dépendance à un processus Codex.
+- [ ] Conserver le sens du prompt et le résultat compact. Adapter le format uniquement si nécessaire au nouveau transport et à sa validation ; documenter le choix du modèle sans figer un identifiant supposé accessible à tous les comptes.
+- [ ] Effectuer une seule requête d'analyse complète par déclenchement ; supprimer le ping d'inférence préalable. Empêcher les générations concurrentes par appuis répétés, gérer annulation et durée d'attente, et ne pas relancer silencieusement une analyse après un résultat ambigu ou une interruption.
+- [ ] Consommer le flux jusqu'à sa réussite complète ; vérifier le format et les références de boîtes avant publication. Mémoriser de manière atomique le nouveau classement et son horodatage uniquement après validation, puis reconstruire le HTML. Un résultat partiel ne devient jamais le dernier rapport réussi.
+- [ ] Conserver le rendu HTML déterministe, sa recherche, l'export/partage et la compatibilité des classements existants. Ne pas réintroduire `Categories`/`BoxCats` ni modifier `Boxes`/`Areas` pour cette connexion. Garder l'interface utilisable dans les thèmes clair et sombre.
+
+#### Recette et critères de clôture
+
+- [ ] Tester avec un service simulé le nombre d'appels : ouvertures répétées avec classement = 0 ; modifications de boîtes = 0 ; première ouverture sans classement = 1 ; chaque Refresh accepté = 1, sans ping supplémentaire. Le renouvellement OAuth n'est pas une requête d'analyse.
+- [ ] Tester la reconstruction HTML, la conservation de la date d'analyse, la lecture du classement antérieur, le redémarrage et la consultation hors ligne ou déconnectée.
+- [ ] Tester les échecs de connexion, refus de permission, expiration de session, quota, annulation, flux interrompu et réponse invalide ; vérifier la conservation du dernier classement et de sa date, ainsi que la possibilité de réessai explicite.
+- [ ] Vérifier réellement connexion, analyse synthétique, mémorisation et réouverture sans nouvelle analyse sur Windows et Android. Limiter les appels distants de recette ; aucun envoi de descriptions personnelles n'est nécessaire à ces essais.
+- [ ] Compiler les deux cibles avec `-m:1`, vérifier Release Android avec AOT/trimming et documenter versions, commandes, résultats et limites dans un compte rendu dédié. Conserver sauvegardes, identités et nouvelle signature Android déjà validées.
+
+**Validation :** génération sans clé API avec un forfait autorisé sur les deux plateformes ; classement multiple compact conservé ; consultation locale sans appel ; Refresh et première ouverture sans classement sont les seuls déclencheurs d'analyse ; horodatage fidèle à la dernière analyse réussie ; dernier classement protégé contre les échecs. La compilation seule ne clôture pas cette étape. La recette finale de l'étape 10 inclut ces parcours et l'étape 09 vérifie leur fonctionnement dans le paquet Windows installé.
+
+**État de l'étape : spécifiée, à implémenter.** Aucun prototype, appel distant ni changement de code n'est réalisé lors de l'insertion de cette spécification. Les améliorations générales du rapport et du système de catégories restent hors de ce lot.
+
+**Fichiers à examiner :** `Views/CategoryReport.xaml` et `.xaml.cs`, `Views/TechPage.xaml`, `ViewModels/GlobalViewModel.cs`, `Utils/ApiKeyStorage.cs`, `Utils/ApiKeyValidator.cs`, `AI/AIConsts.cs`, `Resources/Raw/category_prompt.txt`, services d'authentification et de génération à isoler avec MVVM Toolkit et injection de dépendances, configuration des plateformes et dépendances nécessaires. Vérifier les chemins réels avant modification.
+
+**Références officielles vérifiées pendant le cadrage, à relire avant implémentation :**
+
+- [Disponibilité et permission d'utiliser le forfait ChatGPT](https://developers.openai.com/siwc/quickstart).
+- [Présentation pour projets open source et personnels locaux](https://developers.openai.com/cookbook/articles/sign-in-with-chatgpt).
+- [Inscription, connexion et retour local](https://developers.openai.com/siwc/token-sharing-open-source/sign-in).
+- [Comptes et sessions](https://developers.openai.com/siwc/token-sharing-open-source/profiles-and-sessions).
+- [Modèles et requêtes Responses](https://developers.openai.com/siwc/token-sharing-open-source/models-and-inference).
+- [Restrictions actuelles du parcours](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations).
+
 ### Étape 09 — Remettre à plat la publication Windows
 
-Prérequis : étapes 05 à 07.
+Prérequis : étapes 05 à 08 BIS ; conserver cette étape après la modification AI Category Report.
 
 - [ ] Corriger le profil MSIX : TFM .NET 10, RID portable validé et répertoires de sortie cohérents.
 - [ ] Retirer les chemins de sortie absolus hérités ; rendre l'adresse AppInstaller configurable selon le mode de distribution retenu.
@@ -257,24 +327,25 @@ Prérequis : étapes 05 à 07.
 - [ ] Conserver le minimum Windows actuel sauf contrainte vérifiée et décision documentée.
 - [ ] Tester sélecteurs, WebView2, sauvegarde HTML, client mail, redimensionnement et double-clic.
 - [ ] Vérifier une installation neuve dans un environnement séparé, puis préparer le paquet destiné à la mise à jour en place.
+- [ ] Confirmer la connexion ChatGPT et le retour du navigateur dans le paquet Windows installé ; vérifier génération et consultation du classement mémorisé sans clé API.
 
 **Validation :** MSIX signé généré, paramètres reproductibles et identité de mise à jour confirmée. Toute installation de validation qui remplace la version personnelle doit intervenir après sauvegarde fraîche et préparation du retour arrière.
 
 ### Étape 10 — Recette complète et clôture de la phase 1
 
-Prérequis : étapes 08 et 09 ; points de validation antérieurs soldés.
+Prérequis : étapes 08, 08 BIS et 09 ; points de validation antérieurs, notamment étapes 05 et 06B, soldés. Cette étape reste la dernière du plan.
 
 - [ ] Compiler les deux plateformes en Debug et Release et traiter les avertissements introduits par la migration.
 - [ ] Exécuter les tests ciblés et l'audit NuGet, puis consigner les éventuels problèmes restants.
 - [ ] Recetter création/modification/suppression de boîtes, numérotation, tri, recherche et emplacements ; vérifier l'absence des anciennes catégories persistées et de leurs accès.
 - [ ] Recetter sauvegarde, restauration, annulations, fichiers invalides, export, logs et liens externes.
-- [ ] Confirmer que le code du rapport IA compile et reste en place ; consigner que les tests distants, la connexion et la refonte OpenAI sont reportés, sans bloquer cette phase.
+- [ ] Recetter AI Category Report issu de 08 BIS sur les deux plateformes : connexion au forfait, première analyse, Refresh, conservation du classement et de sa date après échec, puis consultation et export sans nouvelle analyse. Confirmer que les modifications de boîtes ne déclenchent aucun appel ; la refonte générale du rapport reste hors périmètre.
 - [ ] Avant une mise à jour sur un appareil utilisé, refaire une sauvegarde cohérente et relever l'état des données.
 - [ ] Vérifier la mise à jour en place sur Windows et Android, la conservation des données et des clés lorsque leur stockage le permet.
 - [ ] Vérifier de nouveau l'absence d'écran noir et le fonctionnement de l'application installée, indépendamment du lancement depuis l'IDE.
 - [ ] Consigner les versions finales, commandes, résultats de recette et limites connues dans ce document ou un compte rendu lié.
 
-**Validation finale :** application .NET 10 opérationnelle sur les deux plateformes, fonctions du périmètre conservées, suppression contrôlée de `Categories`/`BoxCats`, boîtes et emplacements vérifiés après mise à jour. Le maintien de la compilation OpenAI suffit pour cette intégration ; sa validation distante est explicitement hors périmètre. Les autres points non testés restent ouverts.
+**Validation finale :** application .NET 10 opérationnelle sur les deux plateformes, fonctions du périmètre conservées, suppression contrôlée de `Categories`/`BoxCats`, boîtes et emplacements vérifiés après mise à jour. L'intégration au forfait ChatGPT et le fonctionnement économe du rapport définis à l'étape 08 BIS sont validés sur les deux plateformes ; les appels de recette restent limités et utilisent des données synthétiques. Les autres points non testés restent ouverts.
 
 ## 6. Commandes de validation de référence
 
@@ -313,6 +384,7 @@ Mettre à jour le statut et renseigner la preuve après chaque étape : commande
 | 06A — Paquet SQLite et sauvegardes | Terminé | sqlite-net-pcl 1.11.285 ; 21 tests natifs réussis ; recettes Android 4/16 Ko et Windows confirmées. Dernier APK entièrement reconstruit : démarrage à froid, trois boîtes conservées, Save et alignement natif vérifiés. [Compte rendu](Spec-001-Etape-06A.md). |
 | 06B — Suppression des anciennes catégories | Implémenté, recette interactive à compléter | Migration transactionnelle version 1 avec instantané préalable ; 25 tests natifs synthétiques puis sur copies 72/71/30 réussis. Release Android/Windows compilées. Export/suppression UI et échange interplateforme restants. [Compte rendu](Spec-001-Etape-06B.md). |
 | 07 — Dépendances et compilation OpenAI | Terminée | Newtonsoft.Json inutilisé retiré ; OpenAI 2.4.0, accès, clé, modèle, prompt et rapport conservés sans adaptation. Release Android (AOT/trimming) et Windows non empaqueté : zéro erreur. Refonte et recette distante reportées. [Compte rendu](Spec-001-Etape-07.md). |
-| 08 — Android | À faire | — |
-| 09 — Publication Windows | À faire | — |
-| 10 — Recette et clôture | À faire | — |
+| 08 — Android | Terminée, exception de signature autorisée | API 21/35/36 et smartphone API 33 vérifiés, alignement 16 Ko contrôlé. 1.5.8/code 3 installé, thème sombre corrigé. Source Windows 72 boîtes/11 emplacements restaurée et comparée intégralement ; nouvelle signature sauvegardée hors Git après accord. Connexion OpenAI reportée. [Compte rendu](Spec-001-Etape-08.md). |
+| 08 BIS — AI Category Report / connexion ChatGPT | Spécifiée, à implémenter | Remplacer la clé API par le forfait éligible ; classement daté mémorisé, HTML local, analyse uniquement sans classement ou sur Refresh. Prototype Android à valider ; réalisation dans une autre conversation. |
+| 09 — Publication Windows | À faire après 08 BIS | Publication et recette du paquet Windows incluant la nouvelle connexion. |
+| 10 — Recette et clôture | À faire en dernier | Solder les vérifications antérieures et recetter les deux plateformes, y compris 08 BIS. |
