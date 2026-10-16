@@ -76,7 +76,7 @@ internal sealed class DatabaseStore : IAsyncDisposable
     }
 
     /// <summary>
-    /// Stages a stream, validates its historical schema, then replaces the database with rollback on failure.
+    /// Stages a stream, validates and migrates its schema, then replaces the database with rollback on failure.
     /// </summary>
     internal async Task<string> RestoreAsync(Stream source, CancellationToken cancellationToken = default)
     {
@@ -98,8 +98,6 @@ internal sealed class DatabaseStore : IAsyncDisposable
                 await DatabaseSchema.InitializeAsync(candidate).ConfigureAwait(false);
                 await candidate.Table<Models.Box>().ToListAsync().ConfigureAwait(false);
                 await candidate.Table<Models.Area>().ToListAsync().ConfigureAwait(false);
-                await candidate.Table<Models.Category>().ToListAsync().ConfigureAwait(false);
-                await candidate.Table<Models.BoxCat>().ToListAsync().ConfigureAwait(false);
             }
             finally
             {

@@ -46,20 +46,6 @@
                               Margin="10,0,0,0"/>
             </VerticalStackLayout>
 
-            <!-- category search 
-            <Picker Title="Category filter" IsEnabled="{Binding IsCategorySearchMode}"
-             SelectedItem="{Binding SelectedCategory}"
-             ItemsSource="{Binding Categories}" 
-             ItemDisplayBinding="{Binding Name}"
-             HorizontalOptions="Center" HorizontalTextAlignment="Start" VerticalOptions="Center" 
-             HeightRequest="40"
-             Margin="10,0,0,0"
-             WidthRequest="300">
-                <Picker.Behaviors>
-                    <toolkit:EventToCommandBehavior EventName="SelectedIndexChanged" Command="{Binding PerformSearchCommand}" />
-                </Picker.Behaviors>
-            </Picker>
-            -->
 
 
             <!-- area search -->

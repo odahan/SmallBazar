@@ -98,7 +98,6 @@ public class DataService : IDataService
             var box = await database.Table<Box>().Where(b => b.Number == boxNumber).FirstOrDefaultAsync();
             if (box != null)
             {
-                await database.Table<BoxCat>().DeleteAsync(bc => bc.BoxId == box.Id);
                 await database.DeleteAsync<Box>(box.Id);
                 return true;
             }
@@ -165,32 +164,6 @@ public class DataService : IDataService
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, $"Error searching boxes on text [{text}]: " + ex.Message);
             return new List<Box>();
         }
-    }
-
-    // retrieve all boxes having a category matching the search text
-    public async Task<List<Box>> SearchBoxesCatAsync(string text)
-    {
-        using var lease = await store.AcquireAsync();
-        if (string.IsNullOrWhiteSpace(text)) return await database.Table<Box>().OrderBy(b => b.Number).ToListAsync();
-        try
-        {
-            var allBoxes = await database.Table<Box>().ToListAsync();
-            var allBoxCats = await database.Table<BoxCat>().ToListAsync();
-            var allCats = await database.Table<Category>().ToListAsync();
-
-            var boxes = (from b in allBoxes
-                         join bc in allBoxCats on b.Id equals bc.BoxId
-                         join c in allCats on bc.CatId equals c.Id
-                         where Tools.CleanString(c.Name).Contains(Tools.CleanString(text), StringComparison.OrdinalIgnoreCase)
-                         select b).Distinct().OrderBy(b => b.Number).ToList();
-            return boxes;
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, $"Error searching boxes on category text [{text}]: " + ex.Message);
-            return [];
-        }
-
     }
 
     // Retrieve all boxes having an area matching the search text
@@ -345,186 +318,6 @@ public class DataService : IDataService
         {
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error retrieving all active box numbers: " + ex.Message);
             await dialogService.ShowMessage("Error", "Error retrieving all active box numbers: " + ex.Message, "OK");
-            return [];
-        }
-    }
-
-    #endregion
-
-    #region Category operations
-    // Save or update a Category
-    public async Task<int> SaveCategoryAsync(Category category)
-    {
-        using var lease = await store.AcquireAsync();
-        if (category == null) return -1; 
-        if (category.Id > 0)
-        {
-            try
-            {
-                await database.UpdateAsync(category);
-                return category.Id;
-            }
-            catch (Exception ex)
-            {
-                await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error updating category: " + ex.Message);
-                return -1;
-            }
-        }
-        else
-        {
-            try
-            {
-                return await database.InsertAsync(category);
-            }
-            catch (Exception ex)
-            {
-                await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error inserting category: " + ex.Message);
-                return -1;
-            }
-        }
-        //return -1;
-    }
-
-    public async Task<int> HowMuchTimesCategoryIsUsed(int categoryId)
-    {
-        using var lease = await store.AcquireAsync();
-        try
-        {
-            return await database.Table<BoxCat>().CountAsync(bc => bc.CatId == categoryId);
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error counting category usage: " + ex.Message);
-            return -1;
-        }
-    }
-
-    // Delete a Category and related BoxCats
-    public async Task<int> DeleteCategoryAsync(int categoryId)
-    {
-        using var lease = await store.AcquireAsync();
-        try
-        {
-            await database.Table<BoxCat>().DeleteAsync(bc => bc.CatId == categoryId);
-            return await database.DeleteAsync<Category>(categoryId);
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error deleting category: " + ex.Message);
-            return -1;
-        }
-    }
-
-    // Retrieve all Categories
-    public async Task<List<Category>> GetCategoriesAsync()
-    {
-        using var lease = await store.AcquireAsync();
-        try
-        {
-            return await database.Table<Category>().OrderBy((c) => c.Name).ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error retrieving categories: " + ex.Message);
-            return [];
-        }
-    }
-
-    // Retrieve a Category by ID
-    public async Task<Category> GetCategoryByIdAsync(int id)
-    {
-        using var lease = await store.AcquireAsync();
-        try
-        {
-            return await database.Table<Category>().Where(x => x.Id == id).FirstOrDefaultAsync();
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error retrieving category by ID: " + ex.Message);
-            return null;
-        }
-    }
-    #endregion
-
-    #region BoxCat operations
-
-    // save or update a BoxCat relationship 
-    public async Task<int> SaveBoxCatAsync(BoxCat boxCat)
-    {
-        using var lease = await store.AcquireAsync();
-        if (boxCat == null) return -1;
-        if (boxCat.Id > 0)
-        {
-            try
-            {
-                await database.UpdateAsync(boxCat);
-                return boxCat.Id;
-            }
-            catch (Exception ex)
-            {
-                await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error updating BoxCat: " + ex.Message);
-                return -1;
-            }
-        }
-        else
-        {
-            try
-            {
-                return await database.InsertAsync(boxCat);
-
-            }
-            catch (Exception ex)
-            {
-                await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error inserting BoxCat: " + ex.Message);
-                return -1;
-            }
-        }
-        //return -1;
-    }
-
-    // Add a new BoxCat relationship
-    public async Task<int> AddBoxCatAsync(BoxCat boxCat)
-    {
-        using var lease = await store.AcquireAsync();
-        if (boxCat == null) return -1;
-        try
-        {
-            await database.InsertAsync(boxCat);
-            return boxCat.Id;
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error inserting BoxCat: " + ex.Message);
-            return -1;
-        }
-    }
-
-    // Delete a BoxCat relationship
-    public async Task<int> DeleteBoxCatAsync(int boxCatId)
-    {
-        using var lease = await store.AcquireAsync();
-        try
-        {
-            return await database.DeleteAsync<BoxCat>(boxCatId);
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error deleting BoxCat: " + ex.Message);
-            return -1;
-        }
-    }
-
-    // Retrieve all BoxCat relationships
-    public async Task<List<BoxCat>> GetBoxCatsAsync()
-    {
-        using var lease = await store.AcquireAsync();
-        try
-        {
-            return await database.Table<BoxCat>().ToListAsync();
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error retrieving BoxCat relationships: " + ex.Message);
             return [];
         }
     }
@@ -768,33 +561,6 @@ public class DataService : IDataService
                     sb.Append("Unknown");
                 }
 
-                /*
-                // categories
-                var boxCats = await database.Table<BoxCat>().Where(bc => bc.BoxId == box.Id).ToListAsync();
-
-                if (boxCats.Count > 0)
-                {
-                    sb.Append("; (");
-                }
-
-                var first = true;
-
-                foreach (var boxCat in boxCats)
-                {
-                    var category = await database.Table<Category>().FirstOrDefaultAsync(c => c.Id == boxCat.CatId);
-                    if (category != null)
-                    {
-                        sb.Append(first ? "" : ", ");
-                        first = false;
-                        sb.Append($"{category.Name}");
-                    }
-                }
-
-                if (boxCats.Count > 0)
-                {
-                    sb.Append(")");
-                }
-                */
 
                 sb.AppendLine();
             }
@@ -847,17 +613,9 @@ public class DataService : IDataService
                 int? areaCode = random.Next(MaxAreas);
                 if (random.Next(100) < 50) areaCode = null;
                 await database.InsertAsync(new Box { Number = i, Description = $"{randomword} {i}", AreaCode = areaCode });
-                randomword = string.Concat(syllables[random.Next(syllables.Count)], syllables[random.Next(syllables.Count)], syllables[random.Next(syllables.Count)]);
-                await database.InsertAsync(new Category { Name = $"{randomword} {i}" });
 
             }
 
-            // add BoxCat relationships
-            for (var i = 1; i <= MaxItems * 4; i++)
-            {
-                var boxCat = new BoxCat { BoxId = i % MaxItems, CatId = random.Next(MaxItems) + 1 };
-                await database.InsertAsync(boxCat);
-            }
         }
         catch (Exception ex)
         {

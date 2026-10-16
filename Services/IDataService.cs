@@ -18,27 +18,11 @@ public interface IDataService
     Task<int> GetLastBoxNumberAsync();
     Task<bool> DeleteBoxByBoxNumber(int boxNumber);
     Task<List<Box>> SearchBoxesDescAsync(string text);
-    Task<List<Box>> SearchBoxesCatAsync(string text);
     Task<List<Box>> SearchBoxesAreaAsync(string text);
     Task<int> GetFirstMissingBoxNumbersAsync();
     Task<int> GetNewBoxNumber();
     Task<List<int>> GetAllActiveBoxNumbers();
 
-    #endregion
-
-    #region operations for Category entity
-    Task<int> SaveCategoryAsync(Category category);
-    Task<int> DeleteCategoryAsync(int categoryId);
-    Task<List<Category>> GetCategoriesAsync();
-    Task<Category> GetCategoryByIdAsync(int id);
-    #endregion
-
-    #region operations for BoxCat entity
-    Task<int> AddBoxCatAsync(BoxCat boxCat);
-    Task<int> DeleteBoxCatAsync(int boxCatId);
-    Task<List<BoxCat>> GetBoxCatsAsync();
-    Task<int> SaveBoxCatAsync(BoxCat boxCat);
-    Task<int> HowMuchTimesCategoryIsUsed(int categoryId);
     #endregion
 
     #region Crud operations for Area entity

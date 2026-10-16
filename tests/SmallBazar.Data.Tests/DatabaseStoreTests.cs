@@ -52,7 +52,7 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
     }
 
     [Fact]
-    public async Task StreamRestorePreservesEveryTableAndKeepsFreshRecoverySnapshot()
+    public async Task StreamRestoreMigratesLegacyTablesAndKeepsFreshRecoverySnapshot()
     {
         using (await store.AcquireAsync())
             await store.Connection.InsertAsync(new Box { Number = 1, Description = "Before restore" });
@@ -62,8 +62,8 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
         {
             incoming.CreateTable<Box>();
             incoming.CreateTable<Area>();
-            incoming.CreateTable<Category>();
-            incoming.CreateTable<BoxCat>();
+            incoming.Execute("CREATE TABLE Categories (Id INTEGER PRIMARY KEY, Name TEXT)");
+            incoming.Execute("CREATE TABLE BoxCats (Id INTEGER PRIMARY KEY, BoxId INTEGER, CatId INTEGER)");
             incoming.Execute("INSERT INTO Areas (Id, Name) VALUES (7, 'Storage')");
             incoming.Execute("INSERT INTO Boxes (Id, Number, Description, AreaCode, CreatedAt) VALUES (4, 42, 'Restored', 7, ?)",
                 new DateTime(2024, 2, 3, 4, 5, 6).Ticks);
@@ -73,6 +73,13 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
 
         await using var source = new NonSeekableStream(await File.ReadAllBytesAsync(incomingPath));
         var recovery = await store.RestoreAsync(source);
+        var migrationBackup = Assert.Single(Directory.GetFiles(PathFor("DatabaseMigrationBackups"), "*.db3"));
+        using (var original = new SQLiteConnection(migrationBackup, SQLiteOpenFlags.ReadOnly))
+        {
+            Assert.Equal("Historical category", original.ExecuteScalar<string>("SELECT Name FROM Categories"));
+            Assert.Equal(8, original.ExecuteScalar<int>("SELECT Id FROM BoxCats"));
+            Assert.Equal(0, original.ExecuteScalar<int>("PRAGMA user_version"));
+        }
         using (var saved = new SQLiteConnection(recovery, SQLiteOpenFlags.ReadOnly))
             Assert.Equal("Before restore", saved.Table<Box>().Single().Description);
         using (await store.AcquireAsync())
@@ -82,8 +89,7 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
             Assert.Equal(42, box.Number);
             Assert.Equal(7, box.AreaCode);
             Assert.Equal(new DateTime(2024, 2, 3, 4, 5, 6), box.CreatedAt);
-            Assert.Equal("Historical category", (await store.Connection.Table<Category>().FirstAsync()).Name);
-            Assert.Equal(8, (await store.Connection.Table<BoxCat>().FirstAsync()).Id);
+            await DatabaseSchemaTests.AssertCurrentSchemaAsync(store.Connection);
             Assert.Equal("Storage", (await store.Connection.Table<Area>().FirstAsync()).Name);
             await store.Connection.InsertAsync(new Box { Number = 43, Description = "After restore" });
         }
@@ -240,8 +246,8 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
         else
         {
             using var db = new SQLiteConnection(incomingPath);
-            db.CreateTable<Category>();
-            db.CreateTable<BoxCat>();
+            db.Execute("CREATE TABLE Categories (Id INTEGER PRIMARY KEY, Name TEXT)");
+            db.Execute("CREATE TABLE BoxCats (Id INTEGER PRIMARY KEY, BoxId INTEGER, CatId INTEGER)");
             if (count == 30)
                 db.Execute("CREATE TABLE Boxes (Id INTEGER PRIMARY KEY, Number INTEGER UNIQUE, Description TEXT)");
             else
@@ -258,7 +264,7 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
         var snapshots = new Dictionary<string, (string[] Columns, string[] Rows)>();
         try
         {
-            foreach (var table in new[] { "Boxes", "Areas", "Categories", "BoxCats" })
+            foreach (var table in new[] { "Boxes", "Areas" })
             {
                 var columns = (await incoming.GetTableInfoAsync(table)).Select(c => c.Name).ToArray();
                 if (columns.Length > 0)
@@ -280,11 +286,127 @@ public sealed class DatabaseStoreTests : IAsyncLifetime
         {
             foreach (var (table, snapshot) in snapshots)
                 Assert.Equal(snapshot.Rows, await DatabaseSchemaTests.SnapshotAsync(store.Connection, table, snapshot.Columns));
+            await DatabaseSchemaTests.AssertCurrentSchemaAsync(store.Connection);
             Assert.Equal(count, await store.Connection.Table<Box>().CountAsync());
             if (!snapshots.ContainsKey("Areas")) Assert.Empty(await store.Connection.Table<Area>().ToListAsync());
             Assert.Equal("ok", await store.Connection.ExecuteScalarAsync<string>("PRAGMA integrity_check"));
         }
         Assert.Equal(2, Directory.GetFiles(PathFor("DatabaseRecovery"), "*.db3").Length);
+    }
+
+    [Fact]
+    public async Task MigrationBacksUpCommittedWalValuesBeforeChangingSchemaAndRunsOnlyOnce()
+    {
+        var path = PathFor("BigBazar.db3");
+        var historical = new SQLiteAsyncConnection(path);
+        await historical.EnableWriteAheadLoggingAsync();
+        await historical.ExecuteScalarAsync<int>("PRAGMA wal_autocheckpoint = 0");
+        await historical.CreateTableAsync<Box>();
+        await historical.CreateTableAsync<Area>();
+        await historical.ExecuteAsync("CREATE TABLE Categories (Id INTEGER PRIMARY KEY, Name TEXT)");
+        await historical.ExecuteAsync("CREATE TABLE BoxCats (Id INTEGER PRIMARY KEY, BoxId INTEGER, CatId INTEGER)");
+        await historical.ExecuteAsync("INSERT INTO Categories VALUES (3, 'Legacy')");
+        await historical.ExecuteAsync("INSERT INTO BoxCats VALUES (5, 7, 3)");
+        await historical.ExecuteAsync("INSERT INTO Areas (Id, Name) VALUES (9, 'Storage')");
+        await historical.ExecuteAsync("INSERT INTO Boxes (Id, Number, Description, AreaCode, CreatedAt) VALUES (7, 42, 'Keep', NULL, ?)",
+            new DateTime(2020, 1, 2).Ticks);
+        var boxes = await DatabaseSchemaTests.SnapshotAsync(historical, "Boxes");
+        var areas = await DatabaseSchemaTests.SnapshotAsync(historical, "Areas");
+        try
+        {
+            await store.InitializeAsync();
+            var backup = Assert.Single(Directory.GetFiles(PathFor("DatabaseMigrationBackups"), "*.db3"));
+            using (var saved = new SQLiteConnection(backup, SQLiteOpenFlags.ReadOnly))
+            {
+                Assert.Equal(0, saved.ExecuteScalar<int>("PRAGMA user_version"));
+                Assert.Equal("Legacy", saved.ExecuteScalar<string>("SELECT Name FROM Categories"));
+                Assert.Equal(5, saved.ExecuteScalar<int>("SELECT Id FROM BoxCats"));
+                Assert.Equal("Keep", saved.ExecuteScalar<string>("SELECT Description FROM Boxes"));
+                Assert.Equal("ok", saved.ExecuteScalar<string>("PRAGMA integrity_check"));
+            }
+            using (await store.AcquireAsync())
+            {
+                await DatabaseSchemaTests.AssertCurrentSchemaAsync(store.Connection);
+                Assert.Equal(boxes, await DatabaseSchemaTests.SnapshotAsync(store.Connection, "Boxes"));
+                Assert.Equal(areas, await DatabaseSchemaTests.SnapshotAsync(store.Connection, "Areas"));
+            }
+        }
+        finally
+        {
+            await historical.CloseAsync();
+        }
+        await store.DisposeAsync();
+        store = new DatabaseStore(path);
+        await store.InitializeAsync();
+        Assert.Single(Directory.GetFiles(PathFor("DatabaseMigrationBackups"), "*.db3"));
+        using (await store.AcquireAsync())
+            await DatabaseSchemaTests.AssertCurrentSchemaAsync(store.Connection);
+    }
+
+    [Fact]
+    public async Task FailedMigrationRollsBackDropsAndVersionAndCanBeRetried()
+    {
+        var path = PathFor("BigBazar.db3");
+        using (var db = new SQLiteConnection(path))
+        {
+            db.CreateTable<Box>();
+            db.Insert(new Box { Number = 42, Description = "Keep after failure" });
+            db.Execute("CREATE TABLE BoxCats (Id INTEGER PRIMARY KEY)");
+            db.Execute("INSERT INTO BoxCats VALUES (8)");
+            db.Execute("CREATE VIEW Categories AS SELECT 1 AS Id");
+        }
+        await Assert.ThrowsAnyAsync<Exception>(() => store.InitializeAsync());
+        Assert.False(store.IsInitialized);
+        using (var db = new SQLiteConnection(path))
+        {
+            Assert.Equal(0, db.ExecuteScalar<int>("PRAGMA user_version"));
+            Assert.Equal(8, db.ExecuteScalar<int>("SELECT Id FROM BoxCats"));
+            Assert.Empty(db.GetTableInfo("Areas"));
+            Assert.Equal("Keep after failure", db.Table<Box>().Single().Description);
+            db.Execute("DROP VIEW Categories");
+        }
+        await store.InitializeAsync();
+        Assert.True(store.IsInitialized);
+        using (await store.AcquireAsync())
+            await DatabaseSchemaTests.AssertCurrentSchemaAsync(store.Connection);
+    }
+
+    [Fact]
+    public async Task BackupFailurePreventsAnySchemaChange()
+    {
+        using (var db = new SQLiteConnection(PathFor("BigBazar.db3")))
+        {
+            db.CreateTable<Box>();
+            db.Execute("CREATE TABLE Categories (Id INTEGER PRIMARY KEY)");
+        }
+        await File.WriteAllTextAsync(PathFor("DatabaseMigrationBackups"), "Block backup directory creation");
+        await Assert.ThrowsAnyAsync<IOException>(() => store.InitializeAsync());
+        Assert.False(store.IsInitialized);
+        using (var db = new SQLiteConnection(PathFor("BigBazar.db3")))
+        {
+            Assert.Equal(0, db.ExecuteScalar<int>("PRAGMA user_version"));
+            Assert.NotEmpty(db.GetTableInfo("Categories"));
+            Assert.Empty(db.GetTableInfo("Areas"));
+        }
+        File.Delete(PathFor("DatabaseMigrationBackups"));
+        await store.InitializeAsync();
+        Assert.True(store.IsInitialized);
+    }
+
+    [Fact]
+    public async Task FutureSchemaIsRejectedWithoutChangingItsVersionOrTables()
+    {
+        using (var db = new SQLiteConnection(PathFor("BigBazar.db3")))
+        {
+            db.CreateTable<Box>();
+            db.Execute("CREATE TABLE Categories (Id INTEGER)");
+            db.Execute("PRAGMA user_version = 100");
+        }
+        await Assert.ThrowsAsync<InvalidDataException>(() => store.InitializeAsync());
+        Assert.False(store.IsInitialized);
+        using var saved = new SQLiteConnection(PathFor("BigBazar.db3"));
+        Assert.Equal(100, saved.ExecuteScalar<int>("PRAGMA user_version"));
+        Assert.NotEmpty(saved.GetTableInfo("Categories"));
     }
 
     private sealed class NonSeekableStream(byte[] contents) : MemoryStream(contents)

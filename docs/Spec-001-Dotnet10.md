@@ -4,7 +4,7 @@
 
 Migrer SmallBazar vers .NET 10, .NET MAUI 10 et des dépendances stables compatibles sur Android et Windows. Conserver les fonctions utiles, avec une simplification explicitement demandée : supprimer la gestion persistée des anciennes catégories BigBazar et leur jointure avec les boîtes. Livrer une application qui démarre, retrouve les boîtes et emplacements existants et peut être mise à jour sans perte de ces données.
 
-Date de création : 16 octobre 2026. Statut : migration en cours ; étapes 01 à 04 réalisées avec les limites de validation consignées ; étape 05 implémentée et limites documentées ; lot 06A terminé. Voir le [compte rendu des étapes 01 à 04](Spec-001-Etapes-01-04.md).
+Date de création : 16 octobre 2026. Statut : migration en cours ; étapes 01 à 04 réalisées avec les limites de validation consignées ; étape 05 implémentée et limites documentées ; lot 06A terminé ; lot 06B implémenté et testé, recette interactive restante. Voir le [compte rendu des étapes 01 à 04](Spec-001-Etapes-01-04.md).
 
 Référence : [audit de modernisation](../AUDIT-MODERNISATION.md).
 
@@ -199,16 +199,18 @@ Réaliser deux lots distincts pour séparer les effets du changement de paquet e
 
 Prérequis : lot 06A validé. Ce lot constitue le changement de schéma explicitement demandé pour la phase 1.
 
-- [ ] Inventorier tous les usages de `Category`, `BoxCat`, `Categories` et `BoxCats` ; distinguer ces modèles persistés de `CategoryReport` et des catégories générées par IA, qui sont conservés.
-- [ ] Retirer les modèles historiques, leurs méthodes d'IDataService/DataService, le chargement de catégories du GlobalViewModel, les propriétés/bindings inutilisés et le filtre XAML commenté.
-- [ ] Adapter suppression de boîte, export, réinitialisation, création des tables et génération de données de démonstration pour qu'aucun chemin n'accède aux deux tables retirées ou ne les recrée.
-- [ ] Définir la version du nouveau schéma et une migration unique, transactionnelle et réexécutable sans effet supplémentaire. Pour les bases historiques sans version, identifier l'état réel avant de migrer.
-- [ ] Avant migration d'une base utilisée, créer une sauvegarde cohérente fraîche ; conserver les sauvegardes de référence intactes. Ne pas supprimer puis recréer toute la base.
-- [ ] Dans la migration, supprimer la jointure `BoxCats` puis `Categories` ; enregistrer la nouvelle version seulement après succès de la transaction. En cas d'échec, ne pas déclarer l'initialisation terminée.
-- [ ] Préserver toutes les lignes et valeurs de `Boxes` et `Areas`. Une base neuve ne crée que ces deux tables métier, en plus des éventuelles tables internes SQLite.
-- [ ] Appliquer la même migration aux anciennes sauvegardes restaurées, avant leur utilisation ; accepter également les nouvelles sauvegardes déjà dépourvues de catégories.
-- [ ] Vérifier premier lancement, second lancement, base déjà migrée et migration interrompue/échouée. Couvrir également l'ancienne base BigBazar sans `Areas` et documenter la création d'une table d'emplacements vide si nécessaire.
+- [x] Inventorier tous les usages de `Category`, `BoxCat`, `Categories` et `BoxCats` ; distinguer ces modèles persistés de `CategoryReport` et des catégories générées par IA, qui sont conservés.
+- [x] Retirer les modèles historiques, leurs méthodes d'IDataService/DataService, le chargement de catégories du GlobalViewModel, les propriétés/bindings inutilisés et le filtre XAML commenté.
+- [x] Adapter suppression de boîte, export, réinitialisation, création des tables et génération de données de démonstration pour qu'aucun chemin n'accède aux deux tables retirées ou ne les recrée.
+- [x] Définir la version du nouveau schéma et une migration unique, transactionnelle et réexécutable sans effet supplémentaire. Pour les bases historiques sans version, identifier l'état réel avant de migrer.
+- [x] Avant migration d'une base utilisée, créer une sauvegarde cohérente fraîche ; conserver les sauvegardes de référence intactes. Ne pas supprimer puis recréer toute la base.
+- [x] Dans la migration, supprimer la jointure `BoxCats` puis `Categories` ; enregistrer la nouvelle version seulement après succès de la transaction. En cas d'échec, ne pas déclarer l'initialisation terminée.
+- [x] Préserver toutes les lignes et valeurs de `Boxes` et `Areas`. Une base neuve ne crée que ces deux tables métier, en plus des éventuelles tables internes SQLite.
+- [x] Appliquer la même migration aux anciennes sauvegardes restaurées, avant leur utilisation ; accepter également les nouvelles sauvegardes déjà dépourvues de catégories.
+- [x] Vérifier premier lancement, second lancement, base déjà migrée et migration interrompue/échouée. Couvrir également l'ancienne base BigBazar sans `Areas` et documenter la création d'une table d'emplacements vide si nécessaire.
 - [ ] Tester sur les copies de 72 et 71 boîtes : mêmes boîtes et emplacements, tables `Categories`/`BoxCats` absentes, intégrité correcte, export et suppression de boîte fonctionnels. Vérifier l'échange des sauvegardes migrées entre Android et Windows.
+
+**État du lot : implémenté et testé.** 25 tests natifs réussis sur données synthétiques, puis 25 sur copies des références de 72/71/30 boîtes. Sauvegarde préalable, migration transactionnelle version 1, rollback et reprise après échec vérifiés. Compilations Release Windows et Android réussies ; AOT et trimming Android conservés. La conservation des valeurs et les allers-retours SQLite sont validés ; la dernière case reste ouverte pour les parcours UI export/suppression et l'échange réel Android/Windows. Voir le [compte rendu 06B](Spec-001-Etape-06B.md).
 
 **Fichiers principaux :** `Services/DataService.cs`, `Services/IDataService.cs`, `Models/Category.cs`, `Models/BoxCat.cs`, `ViewModels/GlobalViewModel.cs`, `Views/SearchPage.xaml`, code de migration et tests associés.
 
@@ -307,7 +309,7 @@ Mettre à jour le statut et renseigner la preuve après chaque étape : commande
 | 04 — Démarrage et données | Réalisée, limites documentées | Windows non empaqueté et émulateur Android 15 : base vide et 72 boîtes visibles, sans écran noir. Erreur Windows visible et reprise vérifiée. 5 tests SQLite réussis sur copies ; pas de recette de mise à jour installée. |
 | 05 — Vues et commandes | Implémentée, recette interactive à compléter | Border, contexte explicite du filtre, bindings compilés et API Async adaptés. Compilations Debug Android et Windows non empaqueté réussies ; filtres, tri, sélection, précédent/suivant et modales essayés sur émulateur Android avec données synthétiques. Recette Windows restante. Voir le [compte rendu](Spec-001-Etape-05.md). |
 | 06A — Paquet SQLite et sauvegardes | Terminé | sqlite-net-pcl 1.11.285 ; 21 tests natifs réussis ; recettes Android 4/16 Ko et Windows confirmées. Dernier APK entièrement reconstruit : démarrage à froid, trois boîtes conservées, Save et alignement natif vérifiés. [Compte rendu](Spec-001-Etape-06A.md). |
-| 06B — Suppression des anciennes catégories | À faire | Migration versionnée de `Categories` et `BoxCats` à réaliser sur copies. |
+| 06B — Suppression des anciennes catégories | Implémenté, recette interactive à compléter | Migration transactionnelle version 1 avec instantané préalable ; 25 tests natifs synthétiques puis sur copies 72/71/30 réussis. Release Android/Windows compilées. Export/suppression UI et échange interplateforme restants. [Compte rendu](Spec-001-Etape-06B.md). |
 | 07 — Dépendances et compilation OpenAI | À faire | Intégration actuelle conservée ; refonte et recette distante hors phase 1. |
 | 08 — Android | À faire | — |
 | 09 — Publication Windows | À faire | — |

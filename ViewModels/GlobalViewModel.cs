@@ -50,7 +50,6 @@ namespace SmallBazar.ViewModels
                 IsBusy = true;
                 await dataService.InitializeAsync();
                 await initStorage();
-                await LoadCategoriesAsync();
                 await LoadAreasAsync();
                 await LoadDataAsync();
                 InitSearchModes();
@@ -477,21 +476,10 @@ namespace SmallBazar.ViewModels
         private List<Area> areas;
 
         [ObservableProperty]
-        private List<Category> categories;
-
-        [ObservableProperty]
-        private Category selectedCategory;
-
-        [ObservableProperty]
         private IEnumerable searchModes;
 
         [ObservableProperty]
         private Area selectedAreaForSearch;
-
-        private async Task LoadCategoriesAsync()
-        {
-            Categories = await dataService.GetCategoriesAsync();
-        }
 
         private async Task LoadAreasAsync()
         {
@@ -507,7 +495,6 @@ namespace SmallBazar.ViewModels
                 await ClearFilter();
                 IsBusy = true;
                 if ((string.IsNullOrWhiteSpace(text) && IsDescriptionSearchMode)
-                    || (SelectedCategory == null && IsCategorySearchMode)
                     || (SelectedAreaForSearch == null && IsAreaSearchMode))
                 {
                     return;
@@ -549,18 +536,15 @@ namespace SmallBazar.ViewModels
             try
             {
                 if (newValue == oldValue) return;
-                SelectedCategory = null;
                 SelectedAreaForSearch = null;
                 switch (newValue)
                 {
                     case BoxSearchMode.Description:
                         IsDescriptionSearchMode = true;
-                        IsCategorySearchMode = false;
                         IsAreaSearchMode = false;
                         break;
                     case BoxSearchMode.Area:
                         IsDescriptionSearchMode = false;
-                        IsCategorySearchMode = false;
                         IsAreaSearchMode = true;
                         break;
                 }
@@ -579,15 +563,10 @@ namespace SmallBazar.ViewModels
         private bool isAreaSearchMode;
 
         [ObservableProperty]
-        private bool isCategorySearchMode;
-
-        [ObservableProperty]
         private string searchPlaceHolder;
 
         private void setPlaceHolder()
         {
-            if (IsCategorySearchMode)
-            { SearchPlaceHolder = "Search by Category"; return; }
             if (IsAreaSearchMode)
             { SearchPlaceHolder = "Search by Area"; return; }
             if (IsDescriptionSearchMode)
@@ -647,7 +626,6 @@ namespace SmallBazar.ViewModels
                 await dialogService.ShowMessage("Restart needed", "The App will stop, please restart it.", "Ok");
                 Application.Current?.Quit();
                 /*await initStorage();
-                await LoadCategoriesAsync();
                 await LoadAreasAsync();
                 await LoadDataAsync();
                 sortList();*/

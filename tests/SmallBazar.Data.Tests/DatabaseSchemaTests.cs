@@ -11,7 +11,9 @@ public sealed class DatabaseSchemaTests
     [Fact]
     public async Task EmptyDatabaseCanBeInitializedRepeatedlyWithoutLosingData()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"SmallBazar-{Guid.NewGuid():N}.db3");
+        var directory = Path.Combine(Path.GetTempPath(), $"SmallBazar-schema-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "BigBazar.db3");
         var database = new SQLiteAsyncConnection(path);
         try
         {
@@ -28,19 +30,22 @@ public sealed class DatabaseSchemaTests
             Assert.Equal(box.Description, stored.Description);
             Assert.Equal(box.CreatedAt, stored.CreatedAt);
             Assert.Equal(area.Id, stored.AreaCode);
+            await AssertCurrentSchemaAsync(database);
             Assert.Equal("ok", await database.ExecuteScalarAsync<string>("PRAGMA integrity_check"));
         }
         finally
         {
             await database.CloseAsync();
-            File.Delete(path);
+            Directory.Delete(directory, true);
         }
     }
 
     [Fact]
     public async Task InvalidDatabasePropagatesAnErrorAndCanBeRetriedAfterRepair()
     {
-        var path = Path.Combine(Path.GetTempPath(), $"SmallBazar-{Guid.NewGuid():N}.db3");
+        var directory = Path.Combine(Path.GetTempPath(), $"SmallBazar-schema-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "BigBazar.db3");
         await File.WriteAllTextAsync(path, "This is not a SQLite database.");
         var database = new SQLiteAsyncConnection(path);
         try
@@ -50,12 +55,13 @@ public sealed class DatabaseSchemaTests
             File.Delete(path);
             await DatabaseSchema.InitializeAsync(database);
             Assert.Empty(await database.Table<Box>().ToListAsync());
+            await AssertCurrentSchemaAsync(database);
             Assert.Equal("ok", await database.ExecuteScalarAsync<string>("PRAGMA integrity_check"));
         }
         finally
         {
             await database.CloseAsync();
-            File.Delete(path);
+            Directory.Delete(directory, true);
         }
     }
 
@@ -65,7 +71,9 @@ public sealed class DatabaseSchemaTests
     [InlineData(30, false)]
     public async Task HistoricalSchemaPreservesBoxesAndCreatesMissingAreas(int count, bool hasAreas)
     {
-        var path = Path.Combine(Path.GetTempPath(), $"SmallBazar-{Guid.NewGuid():N}.db3");
+        var directory = Path.Combine(Path.GetTempPath(), $"SmallBazar-schema-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, "BigBazar.db3");
         var referenceDirectory = Environment.GetEnvironmentVariable("SMALLBAZAR_REFERENCE_DIRECTORY");
         if (!string.IsNullOrWhiteSpace(referenceDirectory))
         {
@@ -85,8 +93,8 @@ public sealed class DatabaseSchemaTests
             if (string.IsNullOrWhiteSpace(referenceDirectory))
             {
                 await database.CreateTableAsync<Box>();
-                await database.CreateTableAsync<Category>();
-                await database.CreateTableAsync<BoxCat>();
+                await database.ExecuteAsync("CREATE TABLE Categories (Id INTEGER PRIMARY KEY, Name TEXT)");
+                await database.ExecuteAsync("CREATE TABLE BoxCats (Id INTEGER PRIMARY KEY, BoxId INTEGER, CatId INTEGER)");
                 for (var number = 1; number <= count; number++)
                     await database.InsertAsync(new Box { Number = number, Description = $"Test {number}" });
                 if (hasAreas)
@@ -99,25 +107,30 @@ public sealed class DatabaseSchemaTests
 
             var originalBoxColumns = (await database.GetTableInfoAsync("Boxes")).Select(column => column.Name).ToArray();
             var before = await SnapshotAsync(database, "Boxes", originalBoxColumns);
-            var categoriesBefore = await SnapshotAsync(database, "Categories");
-            var associationsBefore = await SnapshotAsync(database, "BoxCats");
             var areasBefore = hasAreas ? await SnapshotAsync(database, "Areas") : [];
             await DatabaseSchema.InitializeAsync(database);
             await DatabaseSchema.InitializeAsync(database);
 
             Assert.Equal(before, await SnapshotAsync(database, "Boxes", originalBoxColumns));
             Assert.Equal(count, await database.Table<Box>().CountAsync());
-            Assert.Equal(categoriesBefore, await SnapshotAsync(database, "Categories"));
-            Assert.Equal(associationsBefore, await SnapshotAsync(database, "BoxCats"));
             Assert.Equal(areasBefore, await SnapshotAsync(database, "Areas"));
             Assert.Equal(hasAreas ? 11 : 0, await database.Table<Area>().CountAsync());
+            await AssertCurrentSchemaAsync(database);
             Assert.Equal("ok", await database.ExecuteScalarAsync<string>("PRAGMA integrity_check"));
         }
         finally
         {
             await database.CloseAsync();
-            File.Delete(path);
+            Directory.Delete(directory, true);
         }
+    }
+
+    internal static async Task AssertCurrentSchemaAsync(SQLiteAsyncConnection database)
+    {
+        Assert.Equal(DatabaseSchema.CurrentVersion, await database.ExecuteScalarAsync<int>("PRAGMA user_version"));
+        var tables = await database.QueryScalarsAsync<string>(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' ORDER BY name");
+        Assert.Equal(new[] { "Areas", "Boxes" }, tables);
     }
 
     internal static async Task<string[]> SnapshotAsync(SQLiteAsyncConnection database, string table, string[] columnNames = null)

@@ -15,7 +15,5 @@
     <Compile Include="../../Services/DatabaseSchema.cs" Link="DatabaseSchema.cs" />
     <Compile Include="../../Models/Box.cs" Link="Models/Box.cs" />
     <Compile Include="../../Models/Area.cs" Link="Models/Area.cs" />
-    <Compile Include="../../Models/Category.cs" Link="Models/Category.cs" />
-    <Compile Include="../../Models/BoxCat.cs" Link="Models/BoxCat.cs" />
   </ItemGroup>
 </Project>
