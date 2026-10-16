@@ -1,77 +1,43 @@
 #nullable disable
 using CommunityToolkit.Maui.Alerts;
 using CommunityToolkit.Maui.Core;
-using Microsoft.Maui.Controls;
 
 namespace SmallBazar.Services;
 
 public class DialogService(IAppLogger appLogger) : IDialogService
 {
-    // constructor with injection of logger
+    private Window currentWindow;
 
-    private readonly IAppLogger logger = appLogger;
+    /// <summary>
+    /// Associates dialogs with the window that most recently became active.
+    /// </summary>
+    public void SetWindow(Window window) => currentWindow = window;
 
     private Page GetCurrentPage()
     {
-        try
+        var page = currentWindow?.Page ?? Application.Current?.Windows.FirstOrDefault()?.Page;
+        if (page == null)
         {
-            var p = Application.Current != null ? Application.Current.MainPage : null;
-            if (p == null)
-            {
-                _ = logger.LogErrorAsync(AppLogger.LogLevel.Error, "No current MainPage found, DialogService will not work");
-            }
-            return p;
+            _ = appLogger.LogErrorAsync(AppLogger.LogLevel.Error, "No window is available for the dialog.");
+            throw new InvalidOperationException("No window is available for the dialog.");
         }
-        catch (Exception ex)
-        {
-            logger.LogErrorAsync(AppLogger.LogLevel.Error, ex.Message);
-            return null;
-        }
+
+        return page.Navigation.ModalStack.LastOrDefault() ?? page;
     }
 
-    public async Task ShowMessage(string title, string message, string buttonOk)
-    {
-        var p = GetCurrentPage();
-        if (p != null)
-        {
-            await p.DisplayAlert(title, message, buttonOk);
-            return;
-        }
-    }
+    public Task ShowMessage(string title, string message, string buttonOk) =>
+        MainThread.InvokeOnMainThreadAsync(() => GetCurrentPage().DisplayAlertAsync(title, message, buttonOk));
 
-    public async Task ShowToast(string message, ToastDuration duration)
-    {
-        await Toast.Make(message, duration).Show(CancellationToken.None);
-    }
+    public Task ShowToast(string message, ToastDuration duration) =>
+        MainThread.InvokeOnMainThreadAsync(() => Toast.Make(message, duration).Show(CancellationToken.None));
 
-    public async Task<string> ShowMessageWithResponse(string title, string message, string buttonOk, string buttonCancel)
-    {
-        var p = GetCurrentPage();
-        if (p != null)
-        {
-            return await p.DisplayPromptAsync(title, message, buttonOk, buttonCancel);
-        }
-        return string.Empty;
-    }
+    public Task<string> ShowMessageWithResponse(string title, string message, string buttonOk, string buttonCancel) =>
+        MainThread.InvokeOnMainThreadAsync(() => GetCurrentPage().DisplayPromptAsync(title, message, buttonOk, buttonCancel));
 
-    public async Task<bool> ShowMessageWithBooleanResponse(string title, string message, string buttonOk, string buttonCancel)
-    {
-        var p = GetCurrentPage();
-        if (p != null)
-        {
-            return await p.DisplayAlert(title, message, buttonOk, buttonCancel);
-        }
-        return false;
-    }
+    public Task<bool> ShowMessageWithBooleanResponse(string title, string message, string buttonOk, string buttonCancel) =>
+        MainThread.InvokeOnMainThreadAsync(() => GetCurrentPage().DisplayAlertAsync(title, message, buttonOk, buttonCancel));
 
-    public async Task<string> InputTextDialogAsync(string title, string message, string placeholder, string initialvalue = "")
-    {
-        var p = GetCurrentPage();
-        if (p == null)
-        {
-            return string.Empty;
-        }
-        return await p.DisplayPromptAsync(title, message, "OK", "Cancel",
-            placeholder, -1, Keyboard.Text, initialvalue);
-    }
+    public Task<string> InputTextDialogAsync(string title, string message, string placeholder, string initialvalue = "") =>
+        MainThread.InvokeOnMainThreadAsync(() => GetCurrentPage().DisplayPromptAsync(
+            title, message, "OK", "Cancel", placeholder, -1, Keyboard.Text, initialvalue));
 }

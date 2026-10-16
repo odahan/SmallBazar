@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using SmallBazar.Services;
 using SmallBazar.Models;
 using System.Globalization;
@@ -33,19 +33,35 @@ namespace SmallBazar.ViewModels
             Company = versionService.Company;
             Product = versionService.Product;
             Copyright = versionService.Copyright;
-            Task.Run(async () =>
+        }
+
+        private readonly SemaphoreSlim initializationGate = new(1, 1);
+        private bool isInitialized;
+
+        /// <summary>
+        /// Loads startup data on the UI thread and propagates failures to the startup page.
+        /// </summary>
+        public Task InitializeAsync() => MainThread.InvokeOnMainThreadAsync(async () =>
+        {
+            await initializationGate.WaitAsync();
+            try
             {
+                if (isInitialized) return;
+                IsBusy = true;
+                await dataService.InitializeAsync();
                 await initStorage();
                 await LoadCategoriesAsync();
                 await LoadAreasAsync();
                 await LoadDataAsync();
                 InitSearchModes();
-                await logger.LogErrorAsync(AppLogger.LogLevel.Information, $"GlobalViewModel created Db count {BoxList?.Count}");
-            });
-
-
-
-        }
+                isInitialized = true;
+            }
+            finally
+            {
+                IsBusy = false;
+                initializationGate.Release();
+            }
+        });
 
         private void InitSearchModes()
         {
@@ -100,7 +116,7 @@ namespace SmallBazar.ViewModels
 
         partial void OnIsSortByNumberChanged(bool oldValue, bool newValue)
         {
-            sortList().Wait();
+            _ = sortList();
         }
 
         private async Task sortList()
@@ -141,6 +157,7 @@ namespace SmallBazar.ViewModels
         {
             IsFiltered = false;
             await LoadDataAsync();
+            await sortList();
         }
 
         [RelayCommand]
@@ -169,7 +186,7 @@ namespace SmallBazar.ViewModels
             if (vm.HasBeenCancelled == false && vm.NewBoxId > 0)
             {
                 await LoadDataAsync();
-                await sortList().ConfigureAwait(false);
+                await sortList();
                 SelectedBox = BoxList?.FirstOrDefault(b => b.Id == vm.NewBoxId);
                 succeeded = true;
             }
@@ -186,6 +203,8 @@ namespace SmallBazar.ViewModels
         [RelayCommand]
         private async Task DoubleTap(Box item)
         {
+            if (item == null || BoxList?.Contains(item) != true) return;
+            SelectedBox = item;
             var nav = ServiceHelper.GetService<IPageNavigation>();
             if (nav == null) return;
             await nav.NavigateToPageAsync("P2");
@@ -397,7 +416,7 @@ namespace SmallBazar.ViewModels
                 {
                     SelectedBox = null;
                     await LoadDataAsync();
-                    await sortList().ConfigureAwait(false);
+                    await sortList();
                     var navigation = ServiceHelper.GetService<IPageNavigation>();
                     if (navigation == null) throw new Exception("Navigation service not found");
                     // ReSharper disable once RedundantArgumentDefaultValue
@@ -512,7 +531,7 @@ namespace SmallBazar.ViewModels
 
                     finally
                     {
-                        await sortList().ConfigureAwait(false);
+                        await sortList();
                         IsFiltered = true;
                     }
                 }
@@ -624,7 +643,7 @@ namespace SmallBazar.ViewModels
             IsBusy = true;
             try
             {
-                await dataService.RestoreDatabaseAsync();
+                if (!await dataService.RestoreDatabaseAsync()) return;
                 await dialogService.ShowMessage("Restart needed", "The App will stop, please restart it.", "Ok");
                 Application.Current?.Quit();
                 /*await initStorage();

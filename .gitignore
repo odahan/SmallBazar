@@ -4,6 +4,7 @@
 DummyGenerated/
 AppPackages/
 TestResults/
+.local/
 
 # Local IDE settings and temporary files
 .vs/

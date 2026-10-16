@@ -2,28 +2,27 @@
 {
     public partial class App : Application
     {
+        private readonly IServiceProvider services;
+
         public App(IServiceProvider services)
         {
             InitializeComponent();
-
-            // Forcer le thème clair
-            //UserAppTheme = AppTheme.Light;
-
-
-            MainPage = services.GetRequiredService<MainPage>();
+            this.services = services;
             UserAppTheme = PlatformAppTheme;
         }
 
         protected override Window CreateWindow(IActivationState activationState)
         {
-            var window = base.CreateWindow(activationState);
-            window.Title = "SmallBazar";
-            window.Width = 800;  // Set the desired width
-            window.Height = 800; // Set the desired height
+            var window = new Window(services.GetRequiredService<MainPage>())
+            {
+                Title = "SmallBazar",
+                Width = 800,
+                Height = 800
+            };
+            var dialogs = (SmallBazar.Services.DialogService)services.GetRequiredService<SmallBazar.Services.IDialogService>();
+            dialogs.SetWindow(window);
+            window.Activated += (_, _) => dialogs.SetWindow(window);
             return window;
         }
-
-
-
     }
 }

@@ -20,7 +20,7 @@ public partial class BoxListPage : ContentPage
     private async void OnBarButtonClicked(object sender, EventArgs e)
     {
         if (sender is not View button) return;
-        await Animator.AnimateClicView(button).ConfigureAwait(false);
+        await Animator.AnimateClicView(button);
     }
 
     private void CollectionView_SelectionChanged(object sender, SelectionChangedEventArgs e)

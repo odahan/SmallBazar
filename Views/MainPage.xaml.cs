@@ -12,6 +12,22 @@ namespace SmallBazar.Views
             InitializeComponent();
             BindingContext = viewModel;
             NativeNavigation = Navigation;
+            Loaded += OnLoaded;
+        }
+
+        private async void OnLoaded(object sender, EventArgs args)
+        {
+            try
+            {
+                await ServiceHelper.GetService<GlobalViewModel>().InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                await ServiceHelper.GetService<IAppLogger>().LogErrorAsync(
+                    AppLogger.LogLevel.Error, "Startup failed: " + ex);
+                await DisplayAlertAsync("Startup error",
+                    "The database could not be loaded. Please restart the app to retry. Your data has been preserved.", "OK");
+            }
         }
 
         /// <summary>

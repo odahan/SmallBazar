@@ -2,7 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:controls="clr-namespace:SmallBazar.Controls"
+             xmlns:models="clr-namespace:SmallBazar.Models"
              xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
              x:Class="SmallBazar.Views.SearchPage"
              x:DataType="viewModels:GlobalViewModel"
@@ -18,7 +18,7 @@
 
         <VerticalStackLayout Spacing="20" Margin="0,35,0,0">
             <!-- search mode selection -->
-            <Frame Margin="10,5,10,5">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="10,5,10,5">
                 <HorizontalStackLayout HorizontalOptions="Center" Padding="5">
                     <Label Text="Search mode:" VerticalOptions="Center" Margin="0,0,10,0"/>
                     <Picker Title="" 
@@ -30,7 +30,7 @@
                             Margin="0,0,10,0"
                             SelectedIndexChanged="Picker_SelectedIndexChanged" />
                 </HorizontalStackLayout>
-            </Frame>
+            </Border>
 
             <!-- description search -->
             <VerticalStackLayout HorizontalOptions="Center">
@@ -38,7 +38,7 @@
                 <SearchBar x:Name="searchBar" HeightRequest="40" 
                               IsEnabled="{Binding IsDescriptionSearchMode}"
                               SearchCommand="{Binding PerformSearchCommand}"
-                              SearchCommandParameter="{Binding Source={x:Reference searchBar}, Path=Text}"
+                              SearchCommandParameter="{Binding Source={x:Reference searchBar}, Path=Text, x:DataType=SearchBar}"
                               Placeholder="" 
                               HorizontalOptions="Start" 
                               HorizontalTextAlignment="Start" 
@@ -63,15 +63,19 @@
 
 
             <!-- area search -->
-            <Picker Title="Area filter" IsEnabled="{Binding IsAreaSearchMode}"
+            <Picker x:Name="areaPicker" Title="Area filter" IsEnabled="{Binding IsAreaSearchMode}"
              SelectedItem="{Binding SelectedAreaForSearch}"
              ItemsSource="{Binding Areas}" 
-             ItemDisplayBinding="{Binding Name}"
+             ItemDisplayBinding="{Binding Name, x:DataType=models:Area}"
              HorizontalOptions="Center" HorizontalTextAlignment="Start" VerticalOptions="Center" 
              Margin="10,0,0,0"
              WidthRequest="300">
                 <Picker.Behaviors>
-                    <toolkit:EventToCommandBehavior EventName="SelectedIndexChanged" Command="{Binding PerformSearchCommand}" />
+                    <toolkit:EventToCommandBehavior
+                        BindingContext="{Binding Source={x:Reference areaPicker}, Path=BindingContext, x:DataType=Picker}"
+                        x:DataType="viewModels:GlobalViewModel"
+                        EventName="SelectedIndexChanged"
+                        Command="{Binding PerformSearchCommand}" />
                 </Picker.Behaviors>
                 <Picker.HeightRequest>
                     <OnPlatform x:TypeArguments="x:Double">

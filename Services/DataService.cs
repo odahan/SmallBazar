@@ -1,12 +1,9 @@
-﻿#nullable disable
+#nullable disable
 using System.Globalization;
 using System.Text;
-using CommunityToolkit.Maui.Storage;
 using SmallBazar.Models;
 using SmallBazar.Utils;
 using SQLite;
-using CommunityToolkit.Maui.Alerts;
-using CommunityToolkit.Maui.Core;
 
 namespace SmallBazar.Services;
 
@@ -16,23 +13,16 @@ public class DataService : IDataService
     #region private fields
     private const string DatabaseName = "BigBazar.db3";
     private const string DatabaseNameBackup = "SmallBazarDatabaseBackup";
-    private SQLiteAsyncConnection database;
-    private readonly string dbPath;
+    private readonly DatabaseStore store;
+    private SQLiteAsyncConnection database => store.Connection;
     private readonly IAppLogger logger;
-    // ReSharper disable once NotAccessedField.Local
     private readonly IDialogService dialogService;
     #endregion
 
     #region public fields, consts & properties
-    public const SQLiteOpenFlags Flags =
-        // open the database in read/write mode
-        SQLiteOpenFlags.ReadWrite |
-        // create the database if it doesn't exist
-        SQLiteOpenFlags.Create |
-        // enable multi-threaded database access
-        SQLiteOpenFlags.SharedCache;
+    public const SQLiteOpenFlags Flags = DatabaseStore.OpenFlags;
 
-    public bool IsInitialized { get; private set; }
+    public bool IsInitialized => store.IsInitialized;
 
     #endregion
 
@@ -40,73 +30,40 @@ public class DataService : IDataService
     #region Ctor
     public DataService(IAppLogger logger, IDialogService dialog)
     {
-        logger.LogErrorAsync(AppLogger.LogLevel.Information, "Database Service initializing");
-        IsInitialized = false;
         this.logger = logger;
         dialogService = dialog;
-
-                
-        // Construct database path
-
-        dbPath = Path.Combine(FileSystem.AppDataDirectory, DatabaseName);
-        // ex: /data/user/0/com.companyname.bigbazar/files/BigBazar.db3
-        // accessible avec Android Device Explorer dans Android Studio, répertoire data/data/com.companyname.bigbazar/files
-        try
-        {
-            database = new SQLiteAsyncConnection(dbPath, Flags);
-        }
-        catch (Exception ex)
-        {
-            logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error SQLite initializing database: " + ex.Message);
-            IsInitialized = false;
-            return;
-        }
-
-        try
-        {
-            database.CreateTableAsync<Box>();
-            database.CreateTableAsync<Category>();
-            database.CreateTableAsync<BoxCat>();
-            database.CreateTableAsync<Area>();
-        }
-        catch (Exception ex)
-        {
-            logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error creating tables: " + ex.Message);
-            IsInitialized = false;
-            return;
-        }
-
-        // add a SQLIte to make search case-insensitive
-        database.ExecuteAsync("PRAGMA case_sensitive_like = OFF");
-
-        //logger.LogErrorAsync(AppLogger.LogLevel.Information, "Database Service initialized"+new string('-',30));
-        IsInitialized = true;
+        var dbPath = Path.Combine(FileSystem.AppDataDirectory, DatabaseName);
+        store = new DatabaseStore(dbPath);
     }
 
-    public async Task CreateTablesAsync()
+    /// <summary>
+    /// Initializes the serialized connection and allows retry after a failure.
+    /// </summary>
+    public async Task InitializeAsync()
     {
-        IsInitialized = false;
         try
         {
-            await database.CreateTableAsync<Box>();
-            await database.CreateTableAsync<Category>();
-            await database.CreateTableAsync<BoxCat>();
-            await database.CreateTableAsync<Area>();
-            IsInitialized = true;
+            await store.InitializeAsync();
         }
         catch (Exception ex)
         {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error creating tables: " + ex.Message);
-            IsInitialized = false;
+            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Database initialization failed: " + ex);
+            throw;
         }
-
     }
+
+    /// <summary>
+    /// Ensures the connection and its tables are ready before maintenance operations.
+    /// </summary>
+    public Task CreateTablesAsync() => InitializeAsync();
+
     #endregion
 
     #region Box operations
     // Save or update a Box
     public async Task<int> SaveBoxAsync(Box box)
     {
+        using var lease = await store.AcquireAsync();
         if (box == null) return -1; 
         box.CreatedAt = DateTime.Now; // 1.5.5 creation date is now the last modification date
         box.Description = box.Description?.Trim();
@@ -135,9 +92,10 @@ public class DataService : IDataService
 
     public async Task<bool> DeleteBoxByBoxNumber(int boxNumber)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
-            var box = await GetBoxByNumberAsync(boxNumber);
+            var box = await database.Table<Box>().Where(b => b.Number == boxNumber).FirstOrDefaultAsync();
             if (box != null)
             {
                 await database.Table<BoxCat>().DeleteAsync(bc => bc.BoxId == box.Id);
@@ -156,6 +114,7 @@ public class DataService : IDataService
     // Retrieve all Boxes
     public async Task<List<Box>> GetBoxesAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Box>().OrderBy((b) => b.Number).ToListAsync();
@@ -170,28 +129,29 @@ public class DataService : IDataService
     // Retrieve all Boxes matching a search text
     public async Task<List<Box>> SearchBoxesDescAsync(string text)
     {
-        if (string.IsNullOrWhiteSpace(text)) return await GetBoxesAsync();
+        using var lease = await store.AcquireAsync();
+        if (string.IsNullOrWhiteSpace(text)) return await database.Table<Box>().OrderBy(b => b.Number).ToListAsync();
 
         try
         {
-            // Vérifier que la connexion à la base de données n'est pas null
+            // VÃ©rifier que la connexion Ã  la base de donnÃ©es n'est pas null
             if (database == null)
             {
                 await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Database connection is null.");
                 return [];
             }
 
-            // Récupérer les boîtes de la base de données
+            // RÃ©cupÃ©rer les boÃ®tes de la base de donnÃ©es
             var boxes = await database.Table<Box>().ToListAsync();
 
-            // Vérifier que la liste des boîtes n'est pas null
+            // VÃ©rifier que la liste des boÃ®tes n'est pas null
             if (boxes == null)
             {
                 await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Retrieved boxes list is null.");
                 return [];
             }
 
-            // Filtrer et trier les boîtes
+            // Filtrer et trier les boÃ®tes
             var filteredBoxes = boxes
                 .Where(box => Tools.CleanString(box.Description ?? string.Empty)
                     .Contains(Tools.CleanString(text), StringComparison.OrdinalIgnoreCase))
@@ -210,7 +170,8 @@ public class DataService : IDataService
     // retrieve all boxes having a category matching the search text
     public async Task<List<Box>> SearchBoxesCatAsync(string text)
     {
-        if (string.IsNullOrWhiteSpace(text)) return await GetBoxesAsync();
+        using var lease = await store.AcquireAsync();
+        if (string.IsNullOrWhiteSpace(text)) return await database.Table<Box>().OrderBy(b => b.Number).ToListAsync();
         try
         {
             var allBoxes = await database.Table<Box>().ToListAsync();
@@ -235,18 +196,19 @@ public class DataService : IDataService
     // Retrieve all boxes having an area matching the search text
     public async Task<List<Box>> SearchBoxesAreaAsync(string text)
     {
-        if (string.IsNullOrWhiteSpace(text)) return await GetBoxesAsync();
+        using var lease = await store.AcquireAsync();
+        if (string.IsNullOrWhiteSpace(text)) return await database.Table<Box>().OrderBy(b => b.Number).ToListAsync();
 
         try
         {
-            // Vérifier que la connexion à la base de données n'est pas null
+            // VÃ©rifier que la connexion Ã  la base de donnÃ©es n'est pas null
             if (database == null)
             {
                 await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Database connection is null.");
                 return new List<Box>();
             }
 
-            // Récupérer toutes les areas
+            // RÃ©cupÃ©rer toutes les areas
             var areas = await database.Table<Area>().ToListAsync();
             Area areaFound = null;
             var textToSearch = Tools.CleanString(text);
@@ -259,9 +221,9 @@ public class DataService : IDataService
                 break;
             }
 
-            if (areaFound == null) return await GetBoxesAsync();
+            if (areaFound == null) return await database.Table<Box>().OrderBy(b => b.Number).ToListAsync();
 
-            // Récupérer les boîtes correspondant à l'area
+            // RÃ©cupÃ©rer les boÃ®tes correspondant Ã  l'area
             var boxes = await database.Table<Box>()
                 .Where(b => b.AreaCode == areaFound.Id)
                 .OrderBy(b => b.Number)
@@ -281,6 +243,7 @@ public class DataService : IDataService
     // Retrieve a Box by ID
     public async Task<Box> GetBoxByIdAsync(int id)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Box>().Where(x => x.Id == id).FirstOrDefaultAsync();
@@ -295,6 +258,7 @@ public class DataService : IDataService
     // Retrieve a Box by number
     public async Task<Box> GetBoxByNumberAsync(int id)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Box>().Where(x => x.Number == id).FirstOrDefaultAsync();
@@ -308,6 +272,7 @@ public class DataService : IDataService
 
     public async Task<int> GetLastBoxNumberAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             var lastBox = await database.Table<Box>().OrderByDescending(b => b.Number).FirstOrDefaultAsync();
@@ -322,9 +287,10 @@ public class DataService : IDataService
 
     public async Task<int> GetNewBoxNumber()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
-            var firstMissing = await GetFirstMissingBoxNumbersAsync();
+            var firstMissing = await GetFirstMissingBoxNumberCoreAsync();
             if (firstMissing > 0)
             {
                 return firstMissing;
@@ -343,21 +309,10 @@ public class DataService : IDataService
 
     public async Task<int> GetFirstMissingBoxNumbersAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
-            var allLines = await database.Table<Box>().ToListAsync().ConfigureAwait(false);
-            //var allNumbers = await database.QueryAsync<int>("SELECT Number FROM Boxes ORDER BY Number ASC");
-            var allNumbers = allLines.Select(b => b.Number).OrderBy(n => n).ToList();
-
-            for (var i = 0; i < allNumbers.Count - 1; i++)
-            {
-                if (allNumbers[i] + 1 != allNumbers[i + 1])
-                {
-                    int? firstMissingNumber = allNumbers[i] + 1;
-                    return firstMissingNumber.Value;
-                }
-            }
-            return -1;
+            return await GetFirstMissingBoxNumberCoreAsync();
         }
         catch (Exception ex)
         {
@@ -366,12 +321,26 @@ public class DataService : IDataService
         }
     }
 
+    /// <summary>
+    /// Finds a gap while the caller owns the database access lease.
+    /// </summary>
+    private async Task<int> GetFirstMissingBoxNumberCoreAsync()
+    {
+        var numbers = (await database.Table<Box>().ToListAsync()).Select(b => b.Number).OrderBy(n => n).ToArray();
+        for (var index = 0; index < numbers.Length - 1; index++)
+        {
+            if (numbers[index] + 1 != numbers[index + 1]) return numbers[index] + 1;
+        }
+        return -1;
+    }
+
     public async Task<List<int>> GetAllActiveBoxNumbers()
-    { 
-        try 
+    {
+        using var lease = await store.AcquireAsync();
+        try
         {
             return await database.QueryAsync<int>("SELECT Number FROM Boxes ORDER BY Number ASC");
-}
+        }
         catch (Exception ex)
         {
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error retrieving all active box numbers: " + ex.Message);
@@ -386,6 +355,7 @@ public class DataService : IDataService
     // Save or update a Category
     public async Task<int> SaveCategoryAsync(Category category)
     {
+        using var lease = await store.AcquireAsync();
         if (category == null) return -1; 
         if (category.Id > 0)
         {
@@ -417,6 +387,7 @@ public class DataService : IDataService
 
     public async Task<int> HowMuchTimesCategoryIsUsed(int categoryId)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<BoxCat>().CountAsync(bc => bc.CatId == categoryId);
@@ -431,6 +402,7 @@ public class DataService : IDataService
     // Delete a Category and related BoxCats
     public async Task<int> DeleteCategoryAsync(int categoryId)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             await database.Table<BoxCat>().DeleteAsync(bc => bc.CatId == categoryId);
@@ -446,6 +418,7 @@ public class DataService : IDataService
     // Retrieve all Categories
     public async Task<List<Category>> GetCategoriesAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Category>().OrderBy((c) => c.Name).ToListAsync();
@@ -460,6 +433,7 @@ public class DataService : IDataService
     // Retrieve a Category by ID
     public async Task<Category> GetCategoryByIdAsync(int id)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Category>().Where(x => x.Id == id).FirstOrDefaultAsync();
@@ -477,6 +451,7 @@ public class DataService : IDataService
     // save or update a BoxCat relationship 
     public async Task<int> SaveBoxCatAsync(BoxCat boxCat)
     {
+        using var lease = await store.AcquireAsync();
         if (boxCat == null) return -1;
         if (boxCat.Id > 0)
         {
@@ -510,6 +485,7 @@ public class DataService : IDataService
     // Add a new BoxCat relationship
     public async Task<int> AddBoxCatAsync(BoxCat boxCat)
     {
+        using var lease = await store.AcquireAsync();
         if (boxCat == null) return -1;
         try
         {
@@ -526,6 +502,7 @@ public class DataService : IDataService
     // Delete a BoxCat relationship
     public async Task<int> DeleteBoxCatAsync(int boxCatId)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.DeleteAsync<BoxCat>(boxCatId);
@@ -540,6 +517,7 @@ public class DataService : IDataService
     // Retrieve all BoxCat relationships
     public async Task<List<BoxCat>> GetBoxCatsAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<BoxCat>().ToListAsync();
@@ -556,6 +534,7 @@ public class DataService : IDataService
     #region Crud operations for Area entity
     public async Task<int> SaveAreaAsync(Area area)
     {
+        using var lease = await store.AcquireAsync();
         if (area == null) return -1;
         if (area.Id > 0)
         {
@@ -588,6 +567,7 @@ public class DataService : IDataService
 
     public async Task<int> AddAreaAsync(Area area)
     {
+        using var lease = await store.AcquireAsync();
         if (area == null) return -1;
         try
         {
@@ -603,6 +583,7 @@ public class DataService : IDataService
 
     public async Task<int> DeleteAreaAsync(int areaId)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.DeleteAsync<Area>(areaId);
@@ -616,6 +597,7 @@ public class DataService : IDataService
 
     public async Task<List<Area>> GetAreasAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Area>().OrderBy(o => o.Name).ToListAsync();
@@ -629,9 +611,10 @@ public class DataService : IDataService
 
     public async Task<Area> GetAreaForBoxId(int boxId)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
-            var box = await GetBoxByIdAsync(boxId);
+            var box = await database.Table<Box>().Where(b => b.Id == boxId).FirstOrDefaultAsync();
             if (box != null)
             {
                 return await database.Table<Area>().FirstOrDefaultAsync(a => a.Id == box.AreaCode);
@@ -647,6 +630,7 @@ public class DataService : IDataService
 
     public async Task<Area> GetAreaById(int areaCode)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Area>().FirstOrDefaultAsync(a => a.Id == areaCode);
@@ -660,6 +644,7 @@ public class DataService : IDataService
 
     public async Task<int> GetCountUsageForAreaId(int areaCode)
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             return await database.Table<Box>().CountAsync(b => b.AreaCode == areaCode);
@@ -673,211 +658,95 @@ public class DataService : IDataService
     #endregion
 
     #region Backup database
-    // Backup database and send it via share
-    /* public async Task<bool> BackupDatabaseAsync()
-     {
-         if (database != null)
-         {
-             await database.CloseAsync();
-         }
 
-         return await Task.Run(async () =>
-         {
-
-             try
-             {
-                 // Make sure that all database operations are completed before continuing.
-                 var dbCopy = Path.Combine(FileSystem.AppDataDirectory, DatabaseNameBackup);
-                 // Copy the database file to the backup file
-
-                 try
-                 {
-                     File.Copy(dbPath, dbCopy, true);
-                     await Share.RequestAsync(new ShareFileRequest
-                     {
-                         Title = "Bazar Database",
-                         File = new ShareFile(dbCopy)
-                     });
-                 }
-                 catch (Exception ex)
-                 {
-                     await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error creating backup file: " + ex.Message);
-                     await dialogService.ShowMessage("Error creating backup file", ex.Message, "OK");
-                     return false;
-                 }
-                 finally
-                 {
-                     try
-                     {
-                         database = new SQLiteAsyncConnection(dbPath, Flags);
-                     }
-                     catch (Exception ex)
-                     {
-                         await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error SQLite creating database: " + ex.Message);
-                         IsInitialized = false;
-                     }
-                 }
-
-                 return true;
-             }
-             catch (Exception ex)
-             {
-                 await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error sending sql backup by share: " + ex.Message);
-                 return false;
-             }
-         });
-     }*/
-
-
+    /// <summary>
+    /// Creates a consistent snapshot before exporting it through the platform UI.
+    /// </summary>
     public async Task<bool> BackupDatabaseAsync()
     {
-        if (database != null)
+        try
         {
-            await database.CloseAsync();
+            var backupName = $"{DatabaseNameBackup}-{DateTime.UtcNow:yyyyMMddTHHmmssfffffffZ}-{Guid.NewGuid():N}.db3";
+            string destination = null;
+#if WINDOWS
+            var folder = await MainThread.InvokeOnMainThreadAsync(WindowsDatabasePicker.PickBackupFolderAsync);
+            if (folder == null) return false;
+            destination = Path.Combine(folder, backupName);
+#endif
+
+            var snapshot = Path.Combine(FileSystem.CacheDirectory, backupName);
+            await store.BackupAsync(snapshot);
+            if (destination != null)
+            {
+                File.Copy(snapshot, destination, false);
+                File.Delete(snapshot);
+                await dialogService.ShowMessage("Backup saved", $"The database backup was saved to:\n{destination}", "OK");
+            }
+            else
+            {
+                await MainThread.InvokeOnMainThreadAsync(() => Share.RequestAsync(new ShareFileRequest
+                {
+                    Title = "Bazar Database",
+                    File = new ShareFile(snapshot)
+                }));
+            }
+            return true;
         }
-
-        return await Task.Run(async () =>
+        catch (OperationCanceledException)
         {
-            try
-            {
-                var dbBakName =  DatabaseNameBackup + ((DeviceInfo.Platform == DevicePlatform.WinUI) ? "Win.db3" : "Droid.db3");
-                // Make sure that all database operations are completed before continuing.
-                var dbCopy = Path.Combine(FileSystem.AppDataDirectory, dbBakName);
-
-                try
-                {
-                    File.Copy(dbPath, dbCopy, true);
-
-                    if (DeviceInfo.Platform == DevicePlatform.WinUI)
-                    {
-                        // Use FolderPicker from CommunityToolkit.Maui.Storage to let the user choose the directory
-                        var result = await FolderPicker.Default.PickAsync();
-
-                        if (result.IsSuccessful && result.Folder != null)
-                        {
-                            var backupPath = Path.Combine(result.Folder.Path, dbBakName);
-                            File.Copy(dbCopy, backupPath, true);
-                        }
-                        else
-                        {
-                            await dialogService.ShowMessage("Backup Canceled", "No folder selected.", "OK");
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        // Share the file for other platforms
-                        await Share.RequestAsync(new ShareFileRequest
-                        {
-                            Title = "Bazar Database",
-                            File = new ShareFile(dbCopy)
-                        });
-                    }
-                }
-                catch (Exception ex)
-                {
-                    await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error creating backup file: " + ex.Message);
-                    await dialogService.ShowMessage("Error creating backup file", ex.Message, "OK");
-                    return false;
-                }
-                finally
-                {
-                    try
-                    {
-                        database = new SQLiteAsyncConnection(dbPath, Flags);
-                        // add a SQLIte to make search case-insensitive
-                        await database.ExecuteAsync("PRAGMA case_sensitive_like = OFF");
-                    }
-                    catch (Exception ex)
-                    {
-                        await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error SQLite creating database: " + ex.Message);
-                        IsInitialized = false;
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error sending sql backup by share: " + ex.Message);
-                return false;
-            }
-        });
+            return false;
+        }
+        catch (Exception ex)
+        {
+            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error creating backup: " + ex);
+            await dialogService.ShowMessage("Backup failed", ex.Message, "OK");
+            return false;
+        }
     }
 
-
-
+    /// <summary>
+    /// Reads a selected backup as a stream and replaces data only after validation and recovery backup.
+    /// </summary>
     public async Task<bool> RestoreDatabaseAsync()
     {
-        if (database != null)
+        try
         {
-            await database.CloseAsync();
+#if WINDOWS
+            await using var source = await MainThread.InvokeOnMainThreadAsync(WindowsDatabasePicker.PickRestoreStreamAsync);
+            if (source == null) return false;
+#else
+            var result = await MainThread.InvokeOnMainThreadAsync(() => FilePicker.PickAsync(
+                new PickOptions { PickerTitle = "Select a SmallBazar database backup" }));
+            if (result == null) return false;
+
+            await using var source = await result.OpenReadAsync();
+#endif
+            var recoveryPath = await store.RestoreAsync(source);
+            await logger.LogErrorAsync(AppLogger.LogLevel.Information, "Database restored. Recovery copy: " + recoveryPath);
+            return true;
         }
-
-        return await Task.Run(async () =>
+        catch (OperationCanceledException)
         {
-            try
-            {
-                // Open a file picker to select the backup file
-                var result = await FilePicker.PickAsync();
-
-                if (result != null)
-                {
-                    var backupFilePath = result.FullPath;
-
-                    // Check if the selected file is a .db3 file
-                    if (Path.GetExtension(backupFilePath).ToLower() != ".db3")
-                    {
-                        await dialogService.ShowMessage("Invalid file type", "Please select a .db3 file", "OK");
-                        return false;
-                    }
-
-                    // Copy the backup file to the database file
-                    try
-                    {
-                        File.Copy(backupFilePath, dbPath, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error restoring backup file: " + ex.Message);
-                        await dialogService.ShowMessage("Error restoring backup file", ex.Message, "OK");
-                        return false;
-                    }
-                    finally
-                    {
-                        try
-                        {
-                            database = new SQLiteAsyncConnection(dbPath, Flags);
-                            // add a SQLIte to make search case-insensitive
-                            await database.ExecuteAsync("PRAGMA case_sensitive_like = OFF");
-                        }
-                        catch (Exception ex)
-                        {
-                            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error SQLite creating database: " + ex.Message);
-                            IsInitialized = false;
-                        }
-                    }
-                }
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error restoring database: " + ex.Message);
-                return false;
-            }
-        });
+            return false;
+        }
+        catch (Exception ex)
+        {
+            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error restoring database: " + ex);
+            await dialogService.ShowMessage("Restore failed", ex.Message, "OK");
+            return false;
+        }
     }
 
     public async Task<string> ExportDataAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             var sb = new StringBuilder();
             sb.AppendLine($"SmallBazar Data Export on {DateTime.Now.ToString(new CultureInfo("en-US"))}");
             sb.AppendLine("Box number\tDescription\tArea");
 
-            // Récupérer toutes les boîtes
+            // RÃ©cupÃ©rer toutes les boÃ®tes
             var boxes = await database.Table<Box>()
                 .OrderBy(b => b.Number)
                 .ToListAsync();
@@ -945,45 +814,15 @@ public class DataService : IDataService
     #region For Testing purpose
     // For testing & maintenance purpose
 
-    // Reset the database and delete all photos
-    public async Task ResetDatabaseAsync()
-    {
-        if (database != null)
-        {
-            await database.CloseAsync();
-        }
-
-        // Delete the database file
-        try
-        {
-            File.Delete(dbPath);
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, $"An error occurred while deleting the database: {ex.Message}");
-            throw;
-        }
-
-        try
-        {
-            database = new SQLiteAsyncConnection(dbPath, Flags);
-            // add a SQLIte to make search case-insensitive
-            await database.ExecuteAsync("PRAGMA case_sensitive_like = OFF");
-        }
-        catch (Exception ex)
-        {
-            await logger.LogErrorAsync(AppLogger.LogLevel.Error, "Error SQLite creating database: " + ex.Message);
-            IsInitialized = false;
-            return;
-        }
-
-        await CreateTablesAsync(); // Recreate tables
-        
-    }
+    /// <summary>
+    /// Recreates the database while excluding concurrent reads and writes.
+    /// </summary>
+    public Task ResetDatabaseAsync() => store.ResetAsync();
 
     // Populate the database with test data and generate test images
     public async Task PopulateDatabaseWithTestDataAsync()
     {
+        using var lease = await store.AcquireAsync();
         try
         {
             var syllables = new List<string> { "lo", "rem", "ip", "sum", "do", "lor", "sit", "a", "met", "con", "sec", "te", "tur", "ad", "i", "pis", "cing", "e", "lit", "sed", "do", "eius", "mod", "tem", "por", "in", "ci", "di", "dunt", "ut", "la", "bo", "re", "et", "do", "lo", "re", "mag", "na", "a", "li", "qua" };

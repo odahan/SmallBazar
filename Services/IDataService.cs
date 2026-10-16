@@ -8,6 +8,7 @@ public interface IDataService
     // init
     // ReSharper disable once InconsistentNaming
     bool IsInitialized { get; }
+    Task InitializeAsync();
 
     #region operations for Box entity
     Task<int> SaveBoxAsync(Box box);

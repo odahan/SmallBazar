@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-		<TargetFrameworks>net8.0-android;net8.0-windows10.0.19041.0</TargetFrameworks>
+		<TargetFrameworks>net10.0-android;net10.0-windows10.0.19041.0</TargetFrameworks>
 		<OutputType>Exe</OutputType>
 
 		
         <!-- .NET MAUI -->
         <UseMaui>true</UseMaui>
         <SingleProject>true</SingleProject>
+        <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
 
         <!-- Project Options -->
         <Nullable>disable</Nullable>
@@ -39,7 +40,7 @@
 
         <!-- Emit Compiler Generated Files -->
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-        <CompilerGeneratedFilesOutputPath>$(SolutionDir)DummyGenerated</CompilerGeneratedFilesOutputPath>
+        <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)generated/$(Configuration)/$(TargetFramework)</CompilerGeneratedFilesOutputPath>
         <PublishAot>False</PublishAot>
         <Platforms>AnyCPU;x64</Platforms>
         <DefaultLanguage>en</DefaultLanguage>
@@ -68,6 +69,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <Compile Remove="DummyGenerated\**" />
+      <Compile Remove="tests\**" />
       <AndroidResource Remove="Resources\Splash\**" />
       <Compile Remove="Resources\Splash\**" />
       <EmbeddedResource Remove="Resources\Splash\**" />
@@ -93,15 +96,13 @@
 
   
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Maui" Version="9.0.0" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.*" Condition="'$(Configuration)' == 'Debug'" />
+        <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-        <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="$(MauiVersion)" />
         <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
         <PackageReference Include="OpenAI" Version="2.4.0" />
-        <PackageReference Include="sqlite-net-pcl" Version="1.9.172" />
-        <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.10" />
+        <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
     </ItemGroup>
 
     <ItemGroup>

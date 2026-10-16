@@ -72,7 +72,8 @@
                                    TextColor="Black"/>
                             <Grid.GestureRecognizers>
                                 <TapGestureRecognizer NumberOfTapsRequired="2" 
-                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type ContentPage}}, Path=BindingContext.DoubleTapCommand}" />
+                                                      Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:GlobalViewModel}}, Path=DoubleTapCommand, x:DataType=viewModels:GlobalViewModel}"
+                                                      CommandParameter="{Binding .}" />
                             </Grid.GestureRecognizers>
                         </Grid>
                     </DataTemplate>
@@ -93,7 +94,7 @@
         </CollectionView>
 
         <!-- Bottom bar -->
-        <Frame Padding="4" HeightRequest="60" Grid.Row="1">
+        <Border Style="{StaticResource CardBorderStyle}" Padding="4" HeightRequest="60" Grid.Row="1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="60" />
@@ -122,10 +123,10 @@
                              HorizontalOptions="Center" VerticalOptions="Center">
                     <Label Text="Sort" VerticalOptions="Center"/>
                     <RadioButton Content="1..2" Value="NUMBER" GroupName="SORT" IsChecked="{Binding IsSortByNumber}"/>
-                    <RadioButton Content="Text" Value="DESCRIPTION" GroupName="SORT" IsChecked="{Binding IsSortByDescription}"/>
+                    <RadioButton Content="Text" Value="DESCRIPTION" GroupName="SORT" IsChecked="{Binding IsSortByDescription, Mode=OneWay}"/>
                 </StackLayout>
             </Grid>
-        </Frame>
+        </Border>
 
         <!-- ActivityIndicator -->
         <ActivityIndicator Grid.Row="0"

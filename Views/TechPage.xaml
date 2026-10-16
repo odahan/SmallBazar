@@ -22,7 +22,7 @@
 
 
                 <!-- Database tools-->
-                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="0">
+                <Border Style="{StaticResource CardBorderStyle}" Stroke="#FFA300" Padding="2" Grid.Column="0">
                     <VerticalStackLayout Margin="5">
                         <Label Text="Database" FontAttributes="Bold" TextColor="#AE7C23"/>
                         <Button Text="Save" WidthRequest="130" Command="{Binding BackupDatabaseCommand}"/>
@@ -36,24 +36,24 @@
                             </Button.Text>
                         </Button>
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
 
                 <!-- Logs tools -->
-                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="1">
+                <Border Style="{StaticResource CardBorderStyle}" Stroke="#FFA300" Padding="2" Grid.Column="1">
                     <VerticalStackLayout Margin="5">
                         <Label Text="Logs" FontAttributes="Bold" TextColor="#AE7C23"/>
                         <Button Text="Show" WidthRequest="130" Command="{Binding ShowLogsCommand}" />
                         <Button Text="Share" WidthRequest="130" Command="{Binding ShareLogFilesCommand}"/>
                         <Button Text="Clear" WidthRequest="130" Command="{Binding DeleteLogsCommand}"/>
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
 
             </Grid>
 
 
             <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
                 <!-- maintenance -->
-                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="0">
+                <Border Style="{StaticResource CardBorderStyle}" Stroke="#FFA300" Padding="2" Grid.Column="0">
                     <VerticalStackLayout Margin="5">
                         <Label Text="Maintenance" FontAttributes="Bold" TextColor="#AE7C23"/>
                         <Button Text="Areas" WidthRequest="130" Command="{Binding EditAreasCommand}"/>
@@ -62,23 +62,23 @@
                         <Button Text="Fake Data" WidthRequest="130" Command="{Binding PopulateDbCommand}" 
                                 IsEnabled="{DynamicResource IsDebug}"/>
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
 
                 <!-- AI -->
-                <Frame BorderColor="#FFA300" Padding="2" Grid.Column="1">
+                <Border Style="{StaticResource CardBorderStyle}" Stroke="#FFA300" Padding="2" Grid.Column="1">
                     <VerticalStackLayout Margin="5">
                         <Label Text="AI" FontAttributes="Bold" TextColor="#AE7C23"/>
                         <Button Text="Enter Key" WidthRequest="130" Command="{Binding EnterKeyCommand}"/>
                         <Button Text="Clear Key" WidthRequest="130" Command="{Binding ClearKeyCommand}"/>
                         <Button Text="Check Key" WidthRequest="130" Command="{Binding CheckKeyCommand}" />
                     </VerticalStackLayout>
-                </Frame>
+                </Border>
 
 
             </Grid>
 
             <!-- Version info -->
-            <Frame BorderColor="#059FFF" Padding="5" >
+            <Border Style="{StaticResource CardBorderStyle}" Stroke="#059FFF" Padding="5" >
                 <VerticalStackLayout Margin="5">
                     <Label Text="Version" FontAttributes="Bold" TextColor="#059FFF" />
                     <Grid ColumnDefinitions="90,*"
@@ -95,13 +95,13 @@
                         <Label Text="{Binding SoftDescription}" Grid.Row="4" Grid.Column="1" FontAttributes="Bold" />
                     </Grid>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
 
 
 
             <!-- E-Naxos Links -->
-            <Frame BorderColor="#059FFF" Padding="5"  >
+            <Border Style="{StaticResource CardBorderStyle}" Stroke="#059FFF" Padding="5"  >
                 <VerticalStackLayout Margin="5">
                     <Label HorizontalOptions="Center" 
                 Text="Visit www.e-naxos.com" TextDecorations="Underline" >
@@ -116,7 +116,7 @@
                         </Label.GestureRecognizers>
                     </Label>
                 </VerticalStackLayout>
-            </Frame>
+            </Border>
 
         </VerticalStackLayout>
     </ScrollView>

@@ -31,13 +31,13 @@ namespace SmallBazar
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
             {
                 var log = ServiceHelper.GetService<IAppLogger>();
-                log?.LogErrorAsync(AppLogger.LogLevel.Error, "Unhandled Exception!\n"+args.ExceptionObject.ToString()).Wait();
+                _ = log?.LogErrorAsync(AppLogger.LogLevel.Error, "Unhandled Exception!\n"+args.ExceptionObject.ToString());
             };
 
             TaskScheduler.UnobservedTaskException += (sender, args) =>
             {
                 var log = ServiceHelper.GetService<IAppLogger>();
-                log?.LogErrorAsync(AppLogger.LogLevel.Error, "Unhandled Task Exception!\n" + args.Exception.ToString()).Wait();
+                _ = log?.LogErrorAsync(AppLogger.LogLevel.Error, "Unhandled Task Exception!\n" + args.Exception.ToString());
             };
 
             // Register MainPage as a singleton and use the same instance for IPageNavigation

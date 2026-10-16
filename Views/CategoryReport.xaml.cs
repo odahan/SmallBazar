@@ -108,7 +108,7 @@ public partial class CategoryReport : ContentPage
         {
             // Log et gestion de l'erreur
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, ex.Message);
-            await DisplayAlert("Error", "Failed to load the cached report.", "OK");
+            await DisplayAlertAsync("Error", "Failed to load the cached report.", "OK");
         }
     }
 
@@ -517,10 +517,8 @@ public partial class CategoryReport : ContentPage
             var errorMessage = $"Failed to load: {e.Url}, Navigation result: {e.Result}";
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, errorMessage);
 
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                DisplayAlert("Navigation Error", "Failed to load the page.", "OK");
-            });
+            await MainThread.InvokeOnMainThreadAsync(() =>
+                DisplayAlertAsync("Navigation Error", "Failed to load the page.", "OK"));
         }
     }
 
@@ -533,7 +531,7 @@ public partial class CategoryReport : ContentPage
             (string, DateTime?) cachedData0 = await ReadCategorizedDataFromFileAsync();
             if (string.IsNullOrEmpty(cachedData0.Item1))
             {
-                await DisplayAlert("Error", "No report available for saving or sharing.", "OK");
+                await DisplayAlertAsync("Error", "No report available for saving or sharing.", "OK");
                 return;
             }
 
@@ -553,7 +551,7 @@ public partial class CategoryReport : ContentPage
         catch (Exception ex)
         {
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, ex.Message);
-            await DisplayAlert("Error", "Failed to save or share the report.", "OK");
+            await DisplayAlertAsync("Error", "Failed to save or share the report.", "OK");
         }
     }
 
@@ -598,17 +596,17 @@ public partial class CategoryReport : ContentPage
                     await writer.WriteAsync(htmlContent);
                 }
 
-                await DisplayAlert("Success", "Report saved successfully.", "OK");
+                await DisplayAlertAsync("Success", "Report saved successfully.", "OK");
             }
             else
             {
-                await DisplayAlert("Error", "No file was selected.", "OK");
+                await DisplayAlertAsync("Error", "No file was selected.", "OK");
             }
         }
         catch (Exception ex)
         {
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, $"Error saving report: {ex.Message}");
-            await DisplayAlert("Error", "Failed to save the report.", "OK");
+            await DisplayAlertAsync("Error", "Failed to save the report.", "OK");
         }
 #else
     await Task.CompletedTask; // Ensure the method remains asynchronous        
@@ -637,7 +635,7 @@ public partial class CategoryReport : ContentPage
         catch (Exception ex)
         {
             await logger.LogErrorAsync(AppLogger.LogLevel.Error, $"Error sharing report: {ex.Message}");
-            await DisplayAlert("Error", "Failed to share the report.", "OK");
+            await DisplayAlertAsync("Error", "Failed to share the report.", "OK");
         }
 #else
         await Task.CompletedTask; // Ensure the method remains asynchronous        
@@ -653,7 +651,7 @@ public partial class CategoryReport : ContentPage
         (string, DateTime?) cachedData0 = await ReadCategorizedDataFromFileAsync();
         if (string.IsNullOrEmpty(cachedData0.Item1))
         {
-            await DisplayAlert("Error", "No data in the cache. Refresh to generate full report.", "OK");
+            await DisplayAlertAsync("Error", "No data in the cache. Refresh to generate full report.", "OK");
             return;
         }
 

@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" PrivateAssets="all" />
+    <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <Compile Include="../../Services/DatabaseStore.cs" Link="DatabaseStore.cs" />
+    <Compile Include="../../Services/DatabaseSchema.cs" Link="DatabaseSchema.cs" />
+    <Compile Include="../../Models/Box.cs" Link="Models/Box.cs" />
+    <Compile Include="../../Models/Area.cs" Link="Models/Area.cs" />
+    <Compile Include="../../Models/Category.cs" Link="Models/Category.cs" />
+    <Compile Include="../../Models/BoxCat.cs" Link="Models/BoxCat.cs" />
+  </ItemGroup>
+</Project>

@@ -12,13 +12,13 @@ public partial class DetailPage : ContentPage
         BindingContext = ServiceHelper.GetService<GlobalViewModel>();
     }
 
-    private async void OnFrameTapped(object sender, EventArgs e)
+    private async void OnBorderTapped(object sender, EventArgs e)
     {
-        var frame = sender as Frame;
-        if (frame != null)
+        var border = sender as Border;
+        if (border != null)
         {
-            await frame.ScaleTo(0.8, 60, Easing.CubicInOut);
-            await frame.ScaleTo(1, 60, Easing.CubicInOut);
+            await border.ScaleToAsync(0.8, 60, Easing.CubicInOut);
+            await border.ScaleToAsync(1, 60, Easing.CubicInOut);
         }
     }
 

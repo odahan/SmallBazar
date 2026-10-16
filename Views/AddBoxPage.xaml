@@ -19,13 +19,13 @@
                     HeightRequest="50"/>
         </Grid>
 
-        <Frame Grid.Row="1" HeightRequest="200" VerticalOptions="Center">
+        <Border Style="{StaticResource CardBorderStyle}" Grid.Row="1" HeightRequest="200" VerticalOptions="Center">
         <StackLayout Orientation="Vertical"  VerticalOptions="Center" WidthRequest="300">
             <Editor Text="{Binding ChosenBoxNumber}" Keyboard="Numeric" 
                     HorizontalOptions="Center" FontSize="40" HorizontalTextAlignment="Center" WidthRequest="260"/>
             <Label Text="New Box Number" HorizontalOptions="Center"/>
         </StackLayout>
-        </Frame>
+        </Border>
 
 
         <Grid Grid.Row="2" Padding="10,0,10,0" >

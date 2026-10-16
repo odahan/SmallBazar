@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:SmallBazar.Models"
              xmlns:viewModels="clr-namespace:SmallBazar.ViewModels"
              xmlns:toolkit="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              x:Class="SmallBazar.Views.DetailPage"
@@ -35,13 +36,13 @@
             </Grid.RowDefinitions>
 
             <!-- Title Box Number 0 -->
-            <Frame Grid.Row="0" HeightRequest="60" Padding="2" >
+            <Border Style="{StaticResource CardBorderStyle}" Grid.Row="0" HeightRequest="60" Padding="2" >
                 <Grid ColumnDefinitions="80,*" RowDefinitions="*,20">
-                    <Frame Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" HeightRequest="40" WidthRequest="40" 
-                           CornerRadius="20" Padding="2" HorizontalOptions="Center" VerticalOptions="Center"
-                           BorderColor="Orange">
+                    <Border Style="{StaticResource CardBorderStyle}" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" HeightRequest="40" WidthRequest="40"
+                           StrokeShape="RoundRectangle 20" Padding="2" HorizontalOptions="Center" VerticalOptions="Center"
+                           Stroke="Orange">
                         <Image  Source="aboutappicon.png" Aspect="AspectFill" HeightRequest="24" WidthRequest="24" HorizontalOptions="Center"/>
-                    </Frame>
+                    </Border>
                     <Label Grid.Column="1" Grid.Row="0"
                            FontSize="18" FontAttributes="Bold"
                            Text="{Binding SelectedBox.Number, StringFormat='Box n° {0}', FallbackValue='0'}"
@@ -51,43 +52,43 @@
                                            VerticalOptions="Center" Padding="0" Margin="0"
                                            IsVisible="{Binding IsFiltered}" >
 
-                        <Frame BackgroundColor="{StaticResource Primary}" 
+                        <Border Style="{StaticResource CardBorderStyle}" BackgroundColor="{StaticResource Primary}"
                                VerticalOptions="Fill"
                                HorizontalOptions="Fill"
                                Padding="5"
                                Margin="0"
                                HeightRequest="40"
-                               CornerRadius="8">
-                            <Frame.Triggers>
-                                <DataTrigger TargetType="Frame" Binding="{Binding IsPreviousOk}" Value="False">
+                               StrokeShape="RoundRectangle 8">
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsPreviousOk}" Value="False">
                                     <Setter Property="BackgroundColor" Value="Silver"/>
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
-                            </Frame.Triggers>
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding PreviousCommand}" Tapped="OnFrameTapped"/>
-                            </Frame.GestureRecognizers>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding PreviousCommand}" Tapped="OnBorderTapped"/>
+                            </Border.GestureRecognizers>
                             <Polygon Points="0,0 16,10, 0,20" Stroke="Transparent" Fill="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="Center" Rotation="180"/>
-                        </Frame>
+                        </Border>
 
-                        <Frame BackgroundColor="{StaticResource Primary}" 
+                        <Border Style="{StaticResource CardBorderStyle}" BackgroundColor="{StaticResource Primary}"
                                VerticalOptions="Fill"
                                HorizontalOptions="Fill"
                                Padding="5"
                                Margin="0"
                                HeightRequest="40"
-                               CornerRadius="8" >
-                            <Frame.Triggers>
-                                <DataTrigger TargetType="Frame" Binding="{Binding IsNextOk}" Value="False">
+                               StrokeShape="RoundRectangle 8" >
+                            <Border.Triggers>
+                                <DataTrigger TargetType="Border" Binding="{Binding IsNextOk}" Value="False">
                                     <Setter Property="BackgroundColor" Value="Silver"/>
                                     <Setter Property="IsEnabled" Value="False"/>
                                 </DataTrigger>
-                            </Frame.Triggers>
-                            <Frame.GestureRecognizers>
-                                <TapGestureRecognizer Command="{Binding NextCommand}" Tapped="OnFrameTapped"/>
-                            </Frame.GestureRecognizers>
+                            </Border.Triggers>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding NextCommand}" Tapped="OnBorderTapped"/>
+                            </Border.GestureRecognizers>
                             <Polygon Points="0,0 16,10, 0,20" Stroke="Transparent" Fill="{StaticResource Secondary}" VerticalOptions="Center" HorizontalOptions="Center" />
-                        </Frame>
+                        </Border>
 
                     </HorizontalStackLayout>
 
@@ -95,17 +96,17 @@
                            Text="{Binding SelectedBox.CreatedAt, StringFormat='{0:dddd, dd/MM/yyyy HH:mm}', FallbackValue='No date available'}" 
                            FontSize="11"/>
                 </Grid>
-            </Frame>
+            </Border>
 
             <!-- Description editor 1 -->
-            <Frame Grid.Row="1" Padding="0" BackgroundColor="Transparent"
-             BorderColor="Transparent">
+            <Border Style="{StaticResource CardBorderStyle}" Grid.Row="1" Padding="0" BackgroundColor="Transparent"
+             Stroke="Transparent">
                 <Editor Text="{Binding Description}" 
                   BackgroundColor="{StaticResource  Secondary}"
                   TextColor="{StaticResource Black}"
                   FontAttributes="Bold" FontSize="18"
                   />
-            </Frame>
+            </Border>
 
             <!-- Storage Area 2 -->
             <Grid Grid.Row="2" ColumnDefinitions="*,*,*"
@@ -118,7 +119,7 @@
                   FontAttributes="Bold"
                   Margin="10,0,0,0">
                     <Picker.ItemDisplayBinding>
-                        <Binding Path="Name" />
+                        <Binding Path="Name" x:DataType="models:Area" />
                     </Picker.ItemDisplayBinding>
                 </Picker>
                 <Grid Grid.Column="2" ColumnDefinitions="*,*,*">
@@ -134,7 +135,7 @@
 
 
             <!-- Buttons area 3 -->
-            <Frame Grid.Row="3" Padding="2">
+            <Border Style="{StaticResource CardBorderStyle}" Grid.Row="3" Padding="2">
 
                 <Grid VerticalOptions="Fill" Padding="0" 
                       ColumnDefinitions="*,*,*"
@@ -159,7 +160,7 @@
 
                 </Grid>
 
-            </Frame>
+            </Border>
 
 
         </Grid>
