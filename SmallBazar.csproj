@@ -23,8 +23,8 @@
         <ApplicationId>com.enaxos.smallbazar</ApplicationId>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
-        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.6.13</ApplicationDisplayVersion>
+        <ApplicationVersion>0</ApplicationVersion>
         <Copyright>©2024 e-naxos / O.Dahan</Copyright>
         <Description>Helping you find your stuff!</Description>
         <Company>E-Naxos</Company>
@@ -44,21 +44,21 @@
         <PublishAot>False</PublishAot>
         <Platforms>AnyCPU;x64</Platforms>
         <DefaultLanguage>en</DefaultLanguage>
-        <GenerateAppInstallerFile>True</GenerateAppInstallerFile>
-        <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
-        <PackageCertificateThumbprint>2A008DB04713ED7C581DE5D19268018275ED58AF</PackageCertificateThumbprint>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+        <Version>$(ApplicationDisplayVersion)</Version>
+        <RuntimeIdentifier Condition="'$(RuntimeIdentifierOverride)' != ''">$(RuntimeIdentifierOverride)</RuntimeIdentifier>
+        <GenerateAppInstallerFile Condition="'$(GenerateAppInstallerFile)' == ''">false</GenerateAppInstallerFile>
+        <AppxAutoIncrementPackageRevision>false</AppxAutoIncrementPackageRevision>
+        <AppxSymbolPackageEnabled>false</AppxSymbolPackageEnabled>
         <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
-        <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
-        <AppxSymbolPackageEnabled>False</AppxSymbolPackageEnabled>
-        <GenerateTestArtifacts>True</GenerateTestArtifacts>
-        <AppInstallerUri>\\TANKER\Développement\SmallBazarWinInstaller</AppInstallerUri>
-        <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
         <ApplicationId>com.companyname.smallbazar</ApplicationId>
-        <ApplicationDisplayVersion>1.5.8</ApplicationDisplayVersion>
-        <ApplicationVersion>3</ApplicationVersion>
+        <ApplicationDisplayVersion>1.5.14</ApplicationDisplayVersion>
+        <ApplicationVersion>9</ApplicationVersion>
     </PropertyGroup>
 
     <ItemGroup>
@@ -75,7 +75,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Remove="DummyGenerated\**" />
       <Compile Remove="tests\**" />
       <AndroidResource Remove="Resources\Splash\**" />
       <Compile Remove="Resources\Splash\**" />
@@ -106,7 +105,6 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" Condition="'$(Configuration)' == 'Debug'" />
         <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
-        <PackageReference Include="OpenAI" Version="2.4.0" />
         <PackageReference Include="sqlite-net-pcl" Version="1.11.285" />
     </ItemGroup>
 

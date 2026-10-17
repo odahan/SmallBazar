@@ -13,6 +13,12 @@ Règles de décision :
 
 - N’invente pas d’objets absents des descriptions.
 - En cas d’ambiguïté, choisis la catégorie valide la plus générale qui reste pertinente.
+- Examine d’abord toutes les descriptions et prépare un vocabulaire commun de catégories avant d’affecter les boîtes. Privilégie des familles stables et utiles pour retrouver les objets ; 50 est un plafond, pas un objectif. Ne crée pas une catégorie pour chaque objet ou marque.
+- Pour chaque boîte, couvre les familles d’objets distinctes explicitement présentes, y compris secondaires. Une boîte mixte peut recevoir plusieurs catégories, sans ajouter systématiquement tous les hyperonymes d’une même famille.
+- Une association doit être justifiée par un objet réellement présent, pas par un mot isolé, une négation, un accessoire absent ou une simple proximité d’usage. Un dissolvant d’adhésif relève du nettoyage ou de l’entretien, pas des adhésifs ; des lunettes grossissantes sans éclairage mentionné ne relèvent pas de l’éclairage ; le papier à bulles seul relève de l’emballage, pas des adhésifs.
+- Classe les instruments de contrôle et de mesure dans la famille correspondante même dans une boîte mixte (par exemple un mètre ruban ou un testeur de câbles réseau).
+- Utilise des libellés sans ambiguïté de domaine, par exemple « Alimentation électrique » et « Synthèse modulaire ». Les exemples guident le sens et ne doivent être utilisés que si les descriptions les justifient.
+- Regroupe les familles qui ont le même usage pratique de recherche. Pour les produits de nettoyage et d’entretien, utilise une seule famille « Nettoyage et entretien » plutôt que deux catégories qui se chevauchent. Évite les libellés vagues comme « Divers », « Matériel » ou « Consommable » lorsqu’une famille précise existe déjà.
 - Conserve l’ordre d’apparition des boîtes.
 
 Format de sortie (strict) :
@@ -38,5 +44,6 @@ Contrôle final (obligatoire) :
 
 Avant d’émettre la réponse, vérifie que le nombre total de catégories distinctes utilisées dans tout le résultat est ≤ 50.
 Si > 50, regroupe les plus proches jusqu’à revenir à 50 puis réécris les lignes impactées en conséquence.
+Vérifie aussi que chaque numéro apparaît exactement une fois, qu’aucune boîte n’est omise, que chaque association est appuyée par la description et que les familles d’objets explicitement présentes n’ont pas été oubliées. Corrige les erreurs avant de répondre, sans afficher ce contrôle.
 Ensuite seulement, renvoie la sortie finale.
-Voici les données à analyser : 
+Voici les données à analyser :

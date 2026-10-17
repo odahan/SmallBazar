@@ -67,10 +67,16 @@
                 <!-- AI -->
                 <Border Style="{StaticResource CardBorderStyle}" Stroke="#FFA300" Padding="2" Grid.Column="1">
                     <VerticalStackLayout Margin="5">
-                        <Label Text="AI" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource SectionHeadingLight}, Dark={StaticResource Yellow200Accent}}"/>
-                        <Button Text="Enter Key" WidthRequest="130" Command="{Binding EnterKeyCommand}"/>
-                        <Button Text="Clear Key" WidthRequest="130" Command="{Binding ClearKeyCommand}"/>
-                        <Button Text="Check Key" WidthRequest="130" Command="{Binding CheckKeyCommand}" />
+                        <Label Text="ChatGPT" FontAttributes="Bold" TextColor="{AppThemeBinding Light={StaticResource SectionHeadingLight}, Dark={StaticResource Yellow200Accent}}"/>
+                        <Button Command="{Binding TestChatGptConnectionCommand}"
+                                LineBreakMode="WordWrap"
+                                MinimumHeightRequest="{OnPlatform Android=64, Default=44}">
+                            <Button.Text>
+                                <OnPlatform x:TypeArguments="x:String" Default="Account and model">
+                                    <On Platform="Android" Value="Account and&#10;model" />
+                                </OnPlatform>
+                            </Button.Text>
+                        </Button>
                     </VerticalStackLayout>
                 </Border>
 
@@ -121,4 +127,3 @@
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>
-    

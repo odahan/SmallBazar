@@ -2,8 +2,7 @@
 {
     public enum BoxSearchMode
     {
-        Default = 0,
-        Description,
-        Area
+        Description = 1,
+        Area = 2
     }
 }

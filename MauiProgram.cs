@@ -5,6 +5,7 @@ using Microsoft.Maui.Hosting;
 using Microsoft.Extensions.Logging;
 using SmallBazar.Services;
 using SmallBazar.Utils;
+using SmallBazar.Services.ChatGpt;
 
 namespace SmallBazar
 {
@@ -26,6 +27,21 @@ namespace SmallBazar
             builder.Services.AddSingleton<IDialogService, DialogService>();
             builder.Services.AddSingleton<IVersionService, VersionService>();
             builder.Services.AddSingleton<IDataService, DataService>();
+            builder.Services.AddSingleton<IChatGptCredentialStore, MauiChatGptCredentialStore>();
+            builder.Services.AddSingleton<IChatGptBrowser, MauiChatGptBrowser>();
+            builder.Services.AddSingleton(provider => new ChatGptSession(CreateChatGptHttpClient(),
+                provider.GetRequiredService<IChatGptCredentialStore>(), provider.GetRequiredService<IChatGptBrowser>(),
+                MauiChatGptDiagnostics.Record));
+            builder.Services.AddSingleton(provider => new ChatGptInference(CreateChatGptHttpClient(),
+                provider.GetRequiredService<ChatGptSession>(), MauiChatGptDiagnostics.Record));
+            builder.Services.AddTransient<ChatGptConnectionViewModel>();
+            builder.Services.AddTransient<Views.ChatGptConnectionPage>();
+            builder.Services.AddSingleton<ICategoryClassifier, MauiCategoryClassifier>();
+            builder.Services.AddSingleton(provider => new CategoryReportStore(Path.Combine(FileSystem.AppDataDirectory, "Reports"),
+                Path.Combine(FileSystem.CacheDirectory, "categorizedData.txt")));
+            builder.Services.AddSingleton<CategoryReportCoordinator>();
+            builder.Services.AddTransient<CategoryReportViewModel>();
+            builder.Services.AddTransient<Views.CategoryReport>();
 
             // Unhendled exception handler
             AppDomain.CurrentDomain.UnhandledException += (sender, args) =>
@@ -61,6 +77,12 @@ namespace SmallBazar
 
             return app;
         }
+
+        /// <summary>Disables redirects so OAuth credentials cannot be forwarded to another origin.</summary>
+        private static HttpClient CreateChatGptHttpClient() => new(new HttpClientHandler { AllowAutoRedirect = false })
+        {
+            Timeout = TimeSpan.FromMinutes(2)
+        };
     }
 
     

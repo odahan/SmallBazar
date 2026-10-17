@@ -67,7 +67,6 @@ namespace SmallBazar.ViewModels
             SearchModes = Enum.GetValues(typeof(BoxSearchMode));
             CurrentSearchMode = BoxSearchMode.Description;
             setPlaceHolder();
-            OnCurrentSearchModeChanged(BoxSearchMode.Default, BoxSearchMode.Description);
         }
 
         private IAppLogger logger { get; }
@@ -470,7 +469,7 @@ namespace SmallBazar.ViewModels
         // Search Part
 
         [ObservableProperty]
-        private BoxSearchMode currentSearchMode = BoxSearchMode.Default;
+        private BoxSearchMode currentSearchMode;
 
         [ObservableProperty]
         private List<Area> areas;
@@ -585,7 +584,7 @@ namespace SmallBazar.ViewModels
         {
             var navigation = ServiceHelper.GetService<IPageNavigation>();
             if (navigation == null) throw new Exception("Navigation service not found");
-            var v = new CategoryReport(logger, dialogService, dataService);
+            var v = ServiceHelper.GetService<CategoryReport>();
             await navigation.NativeNavigation.PushModalAsync(v);
             await v.TaskCompletionSource.Task;
             v = null;
@@ -859,36 +858,14 @@ namespace SmallBazar.ViewModels
         }
 
         [RelayCommand]
-        private async Task EnterKey()
+        private async Task TestChatGptConnection()
         {
-            var k = await ApiKeyStorage.GetApiKeyAsync();
-            var r = await dialogService.InputTextDialogAsync("Enter API Key", "Enter OpenAI API Key", "", k);
-            var ok = await ApiKeyValidator.IsKeyOk(r);
-            if (ok)
-            {
-                await ApiKeyStorage.SaveApiKeyAsync(r);
-                await dialogService.ShowMessage("API Key", "API Key has been validated & saved.", "Ok");
-            }
-            else
-            {
-                await dialogService.ShowMessage("API Key", "API Key is not valid and has not been saved.", "Ok");
-            }
+            var page = ServiceHelper.GetService<Views.ChatGptConnectionPage>();
+            var navigation = ServiceHelper.GetService<IPageNavigation>();
+            await navigation.NativeNavigation.PushModalAsync(page);
         }
 
 
-        [RelayCommand]
-        private async Task ClearKey()
-        {
-            var b = await ApiKeyStorage.DeleteApiKey();
-            await dialogService.ShowMessage("Clear API Key", b ? "API Key has been deleted." : "API Key has not been deleted.", "Ok");
-        }
-
-        [RelayCommand]
-        private async Task CheckKey()
-        {
-            var b = await ApiKeyValidator.IsKeyOk(await ApiKeyStorage.GetApiKeyAsync());
-            await dialogService.ShowMessage("API Key Check", b ? "API Key is Ok" : "API Key is not valid", "Ok");
-        }
     }
 
     #endregion

@@ -6,6 +6,9 @@ AppPackages/
 TestResults/
 .local/
 
+# Private modernization notes
+/docs/
+
 # Local IDE settings and temporary files
 .vs/
 *.user
@@ -23,3 +26,23 @@ TestResults/
 .env
 .env.*
 !.env.example
+
+# Publication outputs, local databases and signing material
+Publish/
+publishWin/
+Validation06A/
+*.apk
+*.aab
+*.msix
+*.msixbundle
+*.appx
+*.appxbundle
+*.jks
+*.key
+*.pem
+*.dpapi
+*.db3
+*.db3-shm
+*.db3-wal
+*.sqlite
+*.sqlite3

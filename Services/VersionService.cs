@@ -6,9 +6,6 @@ namespace SmallBazar.Services
     public class VersionService : IVersionService
     {
 
-        private bool isVersionBugPresent = true;
-        private string versionWhenVersionIsBugged = "1.6.4"; // 28.11.24 version is still buggy and must be set to 1.0.0 to compile...
-        
         readonly Assembly assembly = Assembly.GetExecutingAssembly();
 
         private readonly AssemblyTitleAttribute titleAttribute;
@@ -16,7 +13,6 @@ namespace SmallBazar.Services
         private readonly AssemblyCompanyAttribute companyAttribute;
         private readonly AssemblyProductAttribute productAttribute;
         private readonly AssemblyCopyrightAttribute copyrightAttribute;
-        private readonly Version assemblyVersion;
 
 
         public VersionService()
@@ -29,7 +25,6 @@ namespace SmallBazar.Services
                 companyAttribute = assembly.GetCustomAttribute<AssemblyCompanyAttribute>();
                 productAttribute = assembly.GetCustomAttribute<AssemblyProductAttribute>();
                 copyrightAttribute = assembly.GetCustomAttribute<AssemblyCopyrightAttribute>();
-                assemblyVersion = assembly.GetName().Version;
             } catch (System.Exception ex)
             {
                 log?.LogErrorAsync(AppLogger.LogLevel.Error, "Error while getting assembly attributes\n" + ex.Message);
@@ -41,9 +36,8 @@ namespace SmallBazar.Services
         public string Company => companyAttribute?.Company ?? string.Empty;
         public string Product => productAttribute?.Product ?? string.Empty;
         public string Copyright => copyrightAttribute?.Copyright ?? string.Empty;
-        public string Version => isVersionBugPresent 
-                                   ? versionWhenVersionIsBugged 
-                                   : assemblyVersion?.ToString() ?? string.Empty;
+        /// <summary>Gets the version reported by the running application package.</summary>
+        public string Version => AppInfo.Current.VersionString;
 
     }
 }
